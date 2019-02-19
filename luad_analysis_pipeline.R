@@ -4,7 +4,7 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(optparse, lib.loc="/Library/Frameworks/R.framework/Versions/3.5/Resources/library")
-library(gridExtra)
+library(gridExtra, lib.loc="/Library/Frameworks/R.framework/Versions/3.5/Resources/library")
 
 options(warn=1)
 
@@ -16,16 +16,14 @@ option_list = list(
               help="index number(s) of row where gene values begins", metavar="character"),
   make_option(c("-c", "--column_gene"), type="integer", default=1, 
               help="index number(s) of column where gene values begins", metavar="character"),
-  make_option(c("-o", "--out"), type="character", default="gene_out.tsv", 
-              help="output file name for geneID/samples dataframe", metavar="character"),
-  make_option(c("-s", "--sample_names"), type="character", default="names_out.txt", 
-              help="output file name of list of samples", metavar="character"),
-  make_option(c("-p", "--plus_outliers"), type="character", default="outlier_plus.tsv", 
-              help="output file name of plus outliers", metavar="character"),
-  make_option(c("-m", "--minus_outliers"), type="character", default="outlier_minus.tsv", 
-              help="output file name of minus outliers", metavar="character"),
-  make_option(c("-b", "--both_outliers"), type="character", default="outlier_both.tsv", 
-              help="output file name of plus", metavar="character")
+  make_option(c("-o", "--out"), type="character", default="out", 
+              help="output file name for all outputs, do not include file extension", metavar="character"),
+  make_option(c("-a", "--aes"), type="character", default="#B2182B", 
+              help="aesthetic of distribution plot: color", metavar="character"),
+  make_option(c("-u", "--upper_x_lime"), type="integer", default="20", 
+              help="upper x limit for distribution plot", metavar="character"),
+  make_option(c("-l", "--lower_x_lim"), type="integer", default="-20", 
+              help="lower x limit for distribution plot", metavar="character")
 ); 
 
 opt_parser = OptionParser(option_list=option_list);
@@ -37,7 +35,17 @@ if (is.null(opt$file)){
 }
 
 # test script:
-# Rscript luad_analysis_pipeline_test.R -f luad-v1.0-phosphodfeome-ratio-norm-NArm.gct -r 27 -c 23 -o luad_test.tsv -s names_test.txt -p outliers_plus_test.tsv -m outliers_minus_test.tsv -b outliers_both_test.tsv
+# Rscript luad_analysis_pipeline_test.R -f luad-v1.0-phosphoproteome-ratio-norm-NArm.gct -r 27 -c 23 -o xxxxxxxx
+
+
+### Establish names 
+out_dataframe <- paste(opt$o, ".tsv", sep="")
+out_names <- paste(opt$o,"_names.txt", sep="")
+out_distribution <- paste(opt$o, "_distribution.tiff", sep = "")
+out_outlier_plus <- paste(opt$o,"_outlier_plus.tsv", sep="")
+out_outlier_minus <- paste(opt$o,"_outlier_minus.tsv", sep="")
+out_outlier_both <- paste(opt$o,"_outlier_both.tsv", sep="")
+ggplot_title <- paste(opt$o, "Distribution", sep=" ")
 
 ### Tidy Data
 
@@ -46,17 +54,30 @@ if (is.null(opt$file)){
 df <- read.table(opt$f, skip = 2, header = TRUE, sep = "\t", fill = TRUE)
 df_gene <- df[c(opt$r:nrow(df)), c(opt$c:ncol(df))]
 as.tibble(df_gene)
-write.table(df_gene, file=opt$o, quote=FALSE, sep='\t', col.names = NA)
+write.table(df_gene, file=out_dataframe, quote=FALSE, sep='\t', col.names = NA)
 
 # Get a list of sample names for the outlier analysis
 df_names <- colnames(df_gene[3:ncol(df_gene)])
-write.table(df_names, opt$s, sep=',',row.names=F, col.names = F)
+write.table(df_names, out_names, sep=',',row.names=F, col.names = F)
 
 
 ### Visualize Distribution 
 
+# Gather only the values in the dataframe, use the sample name as a key
+df_long <- gather(df_gene[3:ncol(df_gene)], na.rm = TRUE)
+df_long$value <- as.numeric(as.character(df_long$value))
 
+# Create plot
+# Options given to optimize 
+df_hist <- ggplot(data = df_long) +
+  geom_histogram(mapping = aes(x = value), fill = opt$a, binwidth = 0.01) + 
+  xlim(opt$l,opt$u) + ylab("Count") + xlab('Normalized Value') + 
+  ggtitle(ggplot_title) + theme(plot.title = element_text(hjust = 0.5))
 
+# Write out distribution plot
+tiff(out_distribution, units="in", width=5, height=5, res=300)
+df_hist
+dev.off()
 
 
 ### Perform Outlier Analysis 
@@ -114,9 +135,9 @@ df_outlier_minus_agg <- aggregate(. ~ df_genesymbol, data = df_outlier_gene_minu
 df_outlier_both_agg <- aggregate(. ~ df_genesymbol, data = df_outlier_gene_both, sum)
 
 # Write out outlier dataframes
-write.table(df_outlier_plus_agg, opt$p, quote=FALSE, sep='\t', col.names = NA)
-write.table(df_outlier_minus_agg, opt$m, quote=FALSE, sep='\t', col.names = NA)
-write.table(df_outlier_both_agg, opt$b, quote=FALSE, sep='\t', col.names = NA)
+write.table(df_outlier_plus_agg, out_outlier_plus, quote=FALSE, sep='\t', col.names = NA)
+write.table(df_outlier_minus_agg, out_outlier_minus, quote=FALSE, sep='\t', col.names = NA)
+write.table(df_outlier_both_agg, out_outlier_both, quote=FALSE, sep='\t', col.names = NA)
 
 
 
