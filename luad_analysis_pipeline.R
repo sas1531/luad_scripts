@@ -6,7 +6,6 @@ library(ggplot2)
 library(optparse, lib.loc="/Library/Frameworks/R.framework/Versions/3.5/Resources/library")
 library(gridExtra, lib.loc="/Library/Frameworks/R.framework/Versions/3.5/Resources/library")
 library(plyr)
-library(devtools)
 
 options(warn=1)
 
