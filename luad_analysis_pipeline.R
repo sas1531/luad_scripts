@@ -39,7 +39,7 @@ if (is.null(opt$file)){
 
 
 ### Required Functions
-# moveme
+# moveme ("HanjoStudy/quotidieR")
 moveme <- function (invec, movecommand) {
   movecommand <- lapply(strsplit(strsplit(movecommand, ";")[[1]], 
                                  ",|\\s+"), function(x) x[x != ""])
@@ -206,4 +206,6 @@ meta_outlier_minus <- rbind.fill(df_meta, df_outlier_minus_agg)
 meta_outlier_both <- rbind.fill(df_meta, df_outlier_both_agg)
 
 # Call group dataframes
+
+
 
