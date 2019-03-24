@@ -32,7 +32,7 @@ option_list = list(
   make_option(c("-l", "--lower_x_lim"), type="integer", default="-20", 
               help="lower x limit for distribution plot", metavar="character"),
   make_option(c("--tag_phospho"), type="character", default="", 
-              help="tag for phospho data: write 'phospho' if the data is phosproteome 
+              help="tag for phospho data: write 'phospho' if the data is phosphoproteomic
               and 'not_phospho' if it isn't", metavar="character"),
   make_option(c("-b", "--base_log"), type="character", default="not_log10", 
               help="if data is in 'log10' specify here and it will be transformed 
@@ -44,12 +44,12 @@ option_list = list(
   make_option(c("--group_2"), type="character", default="Normal", 
               help="Group 2 of comparison", metavar="character"),
   make_option(c("--normal_tumor"), type="character", default="both", 
-              help="If your samples include both tumor and normal samples tag 'both'", metavar="character"),
-  make_option(c("--tumor_column"), type="character", default="NULL", 
+              help="If your samples include both tumor and normal samples insert 'both'", metavar="character"),
+  make_option(c("--tumor_column"), type="character", default="Type", 
               help="Name of tumor column (only required if there are normal and tumor samples", metavar="character"),
-  make_option(c("--tumor_group"), type="character", default="NULL", 
+  make_option(c("--tumor_group"), type="character", default="Tumor", 
               help="Name of tumor group (only reguired if there are normal and tumor samples", metavar="character"),
-  make_option(c("--prot"), type="character", default="yes", 
+  make_option(c("--prot"), type="character", default="", 
               help="yes if the input data is proteomic and includes isoforms with the same gene name", metavar="character")
 ); 
 
@@ -64,10 +64,10 @@ if (is.null(opt$file)){
 
 # test script:
 # Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-phosphoproteome-ratio-norm-NArm.gct -r 27 --column_gene 24 -m 23 -o luad_phos_tumor --tag_phospho phospho --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor 
-# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-proteome-ratio-norm-NArm.gct -r 27 --column_gene 18 -m 17 -o luad_prot_tumor --tag_phospho not_phospho --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor --prot yes
-# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-rnaseq-linear-gene-fpkm-uq-log10-NArm-row-norm.gct -r 22 --column_gene 5 -m 4 -o luad_rna_tumor_log2 --tag_phospho not_phospho -b log10 --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor
-# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-rnaseq-linear-gene-fpkm-uq-log10-NArm-row-norm.gct -r 22 --column_gene 5 -m 4 -o luad_rna_tumor_log10 --tag_phospho not_phospho --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor
-# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-wgs-cnv-somatic.luad.all.hg38-v2.0-20190121.gct -r 22 --column_gene 6 -m 2 -o luad_cnv_tumor --tag_phospho not_phospho --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor
+# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-proteome-ratio-norm-NArm.gct -r 27 --column_gene 18 -m 17 -o luad_prot_tumor --tag_phospho not_phospho --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor --prot yes 
+# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-rnaseq-linear-gene-fpkm-uq-log10-NArm-row-norm.gct -r 22 --column_gene 5 -m 4 -o luad_rna_tumor_log2 --tag_phospho not_phospho -b log10 --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor 
+# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-rnaseq-linear-gene-fpkm-uq-log10-NArm-row-norm.gct -r 22 --column_gene 5 -m 4 -o luad_rna_tumor_log10 --tag_phospho not_phospho --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor 
+# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-wgs-cnv-somatic.luad.all.hg38-v2.0-20190121.gct -r 22 --column_gene 6 -m 2 -o luad_cnv_tumor --tag_phospho not_phospho --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor 
 
 ### Establish names 
 out_dataframe <- paste(opt$o, ".tsv", sep="")
@@ -484,6 +484,7 @@ plus_heat_annotation <- as.data.frame(plus_heat_annotation[with(plus_heat_annota
 colnames(plus_heat_annotation)[1] <- c('comp')
 
 heat_color <- c("red4", "gray85")
+plus_heat_annotation$comp <- droplevels(plus_heat_annotation$comp)
 names(heat_color) <- levels(plus_heat_annotation$comp)
 plus_heat_annotation <- HeatmapAnnotation(df = data.frame(Heat = plus_heat_annotation$comp),
                                           col = list(Heat = heat_color))
@@ -664,6 +665,7 @@ minus_heat_annotation <- as.data.frame(minus_heat_annotation[with(minus_heat_ann
 colnames(minus_heat_annotation)[1] <- c('comp')
 
 heat_color <- c("darkblue", "gray85")
+minus_heat_annotation$comp <- droplevels(minus_heat_annotation$comp)
 names(heat_color) <- levels(minus_heat_annotation$comp)
 minus_heat_annotation <- HeatmapAnnotation(df = data.frame(Heat = minus_heat_annotation$comp),
                                           col = list(Heat = heat_color))
@@ -692,6 +694,3 @@ h2 <- draw(frac_heat_2, heatmap_legend_side = "left")
 tiff(minus_heatmap, units="in", width=6, height=5, res=600)
 h2
 dev.off()
-
-
-
