@@ -70,16 +70,6 @@ if (is.null(opt$file)){
   stop("At least one argument must be supplied (input file).n", call.=FALSE)
 }
 
-# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-phosphoproteome-ratio-norm-NArm.gct -r 27 --column_gene 24 -m 23 -o luad_test_xxx --tag_phospho phospho --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor --analysis both
-
-
-# test script:
-# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-phosphoproteome-ratio-norm-NArm.gct -r 27 --column_gene 24 -m 23 -o luad_phos_tumor --tag_phospho phospho --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor 
-# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-proteome-ratio-norm-NArm.gct -r 27 --column_gene 18 -m 17 -o luad_prot_tumor --tag_phospho not_phospho --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor --prot yes 
-# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-rnaseq-linear-gene-fpkm-uq-log10-NArm-row-norm.gct -r 22 --column_gene 5 -m 4 -o luad_rna_tumor_log2 --tag_phospho not_phospho -b log10 --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor 
-# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-rnaseq-linear-gene-fpkm-uq-log10-NArm-row-norm.gct -r 22 --column_gene 5 -m 4 -o luad_rna_tumor_log10 --tag_phospho not_phospho --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor 
-# Rscript luad_analysis_pipeline_test.R -f ./luad_original_data/luad-v1.0-wgs-cnv-somatic.luad.all.hg38-v2.0-20190121.gct -r 22 --column_gene 6 -m 2 -o luad_cnv_tumor --tag_phospho not_phospho --comparison Region.of.Origin --group_1 asian --group_2 western --normal_tumor both --tumor_column Type --tumor_group Tumor 
-
 ### Establish names 
 out_dataframe <- paste(opt$o, ".tsv", sep="")
 out_names <- paste(opt$o,"_names.txt", sep="")
@@ -93,6 +83,65 @@ plus_sig_output <- paste(opt$o, "_up_", opt$group_1, "_", opt$group_2, "_sig_out
 minus_sig_output <- paste(opt$o, "_down_", opt$group_1, "_", opt$group_2, "_sig_outliers.txt", sep="")
 plus_heatmap <- paste(opt$o,"_up_heatmap_sig_", opt$group_1, "_", opt$group_2, ".png", sep="")
 minus_heatmap <- paste(opt$o,"_down_heatmap_sig_", opt$group_1, "_", opt$group_2, ".png", sep="")
+
+
+### Functions
+
+### Log transformation function
+# If log is log10, change to log2
+log10_transform <- function(df_gene, log){
+  if (log == 'log10'){
+    GeneSymbol <- df_gene[, 2]
+    df_gene_log10 <- lapply(df_gene[,c(3:ncol(df_gene))], 
+                            function(x) as.numeric(as.character(x)))
+    df_gene_log <- lapply(df_gene_log10, function(x) (10**(x)))
+    df_gene_log2 <- lapply(df_gene_log,function(x) (log2(x)))
+    df_gene_log2_final <- cbind(as.data.frame(GeneSymbol), as.data.frame(df_gene_log2))
+    return(df_gene_log2_final)
+  } else {
+    return(df_gene)
+  }
+}
+
+### Phosphosite aggregation function
+# If data is phosphoproteomic, aggregate and sum outlier values 
+agg_phospho <- function(df_outlier_agg, df_not_outlier_agg, tag){
+  if (tag == 'phospho'){
+    df_final_outlier_agg <- aggregate(. ~ GeneSymbol.out, data = df_outlier_agg, 
+                                      count_outliers, na.action = na.pass)
+    df_final_not_outlier_agg <- aggregate(. ~ GeneSymbol, data = df_not_outlier_agg, 
+                                          count_not_outliers, na.action = na.pass)
+    df_final_outlier <- cbind(df_final_not_outlier_agg, df_final_outlier_agg)
+    df_final_outlier <- dplyr::select(df_final_outlier, -GeneSymbol.out)
+    df_final_outlier$GeneSymbol <- as.factor(as.character(df_final_outlier$GeneSymbol))
+    return(df_final_outlier)
+  } else 
+    # Replace df_not_outlier_agg
+    df_not_outlier_agg <- dplyr::select(df_not_outlier_agg, -GeneSymbol)
+    df_outlier_agg <- dplyr::select(df_outlier_agg, -GeneSymbol.out)
+    df_not_outlier_agg <- lapply(df_not_outlier_agg, function(x) ifelse(x == 0, 1, 0))
+    df_final_outlier <- cbind(df_genesymbol, df_not_outlier_agg)
+    df_final_outlier <- cbind(df_final_outlier, df_outlier_agg)
+    colnames(df_final_outlier)[1] <- "GeneSymbol"
+    return(df_final_outlier)
+}
+
+### Fisher Exact function
+# If number of outlier in group 1 is greater than 0.3 * number of outliers
+fish_exact <- function(y){
+  min_num_outliers <- as.numeric(length(outlier_group1_col)*0.3)
+  num_outlier_samples <- as.numeric(y['count_outliers'])
+  if (num_outlier_samples > min_num_outliers){
+    table <- (matrix(as.numeric(c(y['outlier_group1'], y['outlier_group2'],
+                                  y['not_outlier_group1'], y['not_outlier_group2'])),
+                     nrow = 2))
+    p <- fisher.test(table)$p.value
+    p
+  } else {
+    p <- NA
+    p
+  }
+}
 
 
 ### Tidy Data
@@ -111,19 +160,6 @@ if (opt$prot == "yes"){
 
 
 # Change dataframe values from log10 to log2 if needed
-log10_transform <- function(df_gene, log){
-  if (log == 'log10'){
-    GeneSymbol <- df_gene[, 2]
-    df_gene_log10 <- lapply(df_gene[,c(3:ncol(df_gene))], 
-                            function(x) as.numeric(as.character(x)))
-    df_gene_log <- lapply(df_gene_log10, function(x) (10**(x)))
-    df_gene_log2 <- lapply(df_gene_log,function(x) (log2(x)))
-    df_gene_log2_final <- cbind(as.data.frame(GeneSymbol), as.data.frame(df_gene_log2))
-    return(df_gene_log2_final)
-  } else {
-    return(df_gene)
-  }
-}
 df_gene <- log10_transform(df_gene, opt$b)
 
 # Get a list of sample names for the outlier analysis
@@ -183,19 +219,6 @@ df_hist <- ggplot(data = df_long) +
   xlim(opt$l,opt$u) + ylab("Count") + xlab('Normalized Value') + 
   ggtitle(ggplot_title) + theme(plot.title = element_text(hjust = 0.5))
 
-# Export tables and figures
-if (opt$analysis == "outlier" | opt$analysis == "both"){
-  # Write out gene and sample dataframe
-  write.table(df_gene, file=out_dataframe, quote=FALSE, sep='\t', col.names = NA)
-  # Write out meta data
-  write.table(meta_df, file=out_meta_data, quote=FALSE, sep='\t', col.names = NA)
-  # Write out sample names
-  write.table(df_names, out_names, sep=',',row.names=F, col.names = F)
-  # Write out distribution plot
-  png(out_distribution, units="in", width=5, height=5, res=300)
-  print(df_hist)
-  dev.off()
-}
 
 ### Perform Outlier Analysis 
 
@@ -259,40 +282,32 @@ df_final_not_outlier_minus <- dplyr::select(df_outlier_gene_minus, -count)
 colnames(df_final_not_outlier_minus) <- paste(colnames(df_final_not_outlier_minus), "not_outlier", sep = "_")
 colnames(df_final_not_outlier_minus)[1] <- "GeneSymbol"
 
-agg_phospho <- function(df_outlier_agg, df_not_outlier_agg, tag){
-  if (tag == 'phospho'){
-    df_final_outlier_agg <- aggregate(. ~ GeneSymbol.out, data = df_outlier_agg, 
-                                       count_outliers, na.action = na.pass)
-    df_final_not_outlier_agg <- aggregate(. ~ GeneSymbol, data = df_not_outlier_agg, 
-                                           count_not_outliers, na.action = na.pass)
-    df_final_outlier <- cbind(df_final_not_outlier_agg, df_final_outlier_agg)
-    df_final_outlier <- dplyr::select(df_final_outlier, -GeneSymbol.out)
-    df_final_outlier$GeneSymbol <- as.factor(as.character(df_final_outlier$GeneSymbol))
-    return(df_final_outlier)
-  } else 
-    # Replace df_not_outlier_agg
-    df_not_outlier_agg <- dplyr::select(df_not_outlier_agg, -GeneSymbol)
-    df_outlier_agg <- dplyr::select(df_outlier_agg, -GeneSymbol.out)
-    df_not_outlier_agg <- lapply(df_not_outlier_agg, function(x) ifelse(x == 0, 1, 0))
-    df_final_outlier <- cbind(df_genesymbol, df_not_outlier_agg)
-    df_final_outlier <- cbind(df_final_outlier, df_outlier_agg)
-    colnames(df_final_outlier)[1] <- "GeneSymbol"
-    return(df_final_outlier)
-}
-
 # Run aggregation function
 df_final_plus <- agg_phospho(df_final_outlier_plus, df_final_not_outlier_plus, opt$tag_phospho)
 df_final_minus <- agg_phospho(df_final_outlier_minus, df_final_not_outlier_minus, opt$tag_phospho)
 
-# Write out outlier dataframes
-write.table(df_final_plus, file = out_outlier_plus, quote=FALSE, sep='\t', col.names = NA)
-write.table(df_final_minus, file = out_outlier_minus, quote=FALSE, sep='\t', col.names = NA)
+# Export tables and figures
+if (opt$analysis == "outlier" | opt$analysis == "both"){
+  # Write out gene and sample dataframe
+  write.table(df_gene, file=out_dataframe, quote=FALSE, sep='\t', col.names = NA)
+  # Write out meta data
+  write.table(meta_df, file=out_meta_data, quote=FALSE, sep='\t', col.names = NA)
+  # Write out sample names
+  write.table(df_names, out_names, sep=',',row.names=F, col.names = F)
+  # Write out outlier dataframes
+  write.table(df_final_plus, file = out_outlier_plus, quote=FALSE, sep='\t', col.names = NA)
+  write.table(df_final_minus, file = out_outlier_minus, quote=FALSE, sep='\t', col.names = NA)
+  # Write out distribution plot
+  png(out_distribution, units="in", width=5, height=5, res=300)
+  print(df_hist)
+  dev.off()
+  print("Outlier Analyis Complete")
+}
 
 
 ### Group Comparison
 
 # Isolate Group Samples
-
 comparison <- grep(opt$comparison, colnames(meta_df_t))
 colnames(meta_df_t)[comparison] <- c('comp')
 sample <- grep(opt$tumor_column, colnames(meta_df_t))
@@ -301,7 +316,6 @@ comparison <- grep(opt$comparison, colnames(meta_df_final_t))
 colnames(meta_df_final_t)[comparison] <- c('comp')
 sample <- grep(opt$tumor_column, colnames(meta_df_final_t))
 colnames(meta_df_final_t)[sample] <- c('samp')
-
 
 if (opt$normal_tumor == 'both'){
   all_col <- meta_df_t[((meta_df_t$comp == opt$group_1 | meta_df_t$comp == opt$group_2) &
@@ -338,31 +352,10 @@ not_outlier_group1_col <- as.vector(not_outlier_group1_col[[1]])
 outlier_group2_col <- as.vector(outlier_group2_col[[1]])
 not_outlier_group2_col <- as.vector(not_outlier_group2_col[[1]])
 
-# Create contingency table 
-# If number of outlier in group 1 is greater than 0.3 * number of outliers
-# Run fischer exact 
-fish_exact <- function(y){
-  min_num_outliers <- as.numeric(length(outlier_group1_col)*0.3)
-  num_outlier_samples <- as.numeric(y['count_outliers'])
-  if (num_outlier_samples > min_num_outliers){
-    table <- (matrix(as.numeric(c(y['outlier_group1'], y['outlier_group2'],
-                                  y['not_outlier_group1'], y['not_outlier_group2'])),
-                     nrow = 2))
-    p <- fisher.test(table)$p.value
-    p
-  } else {
-    p <- NA
-    p
-  }
-}
-
-
-###################
-
+# Create list of dataframes for comparison: upregulated and downregulated
 dataframes <- list(df_final_plus, df_final_minus)
 
 for (df_final in dataframes){
-  
   # Set Parameters for plus/minus output 
   if (identical(df_final, df_final_plus) == TRUE){
     color1 <-  "red4"
@@ -550,6 +543,7 @@ for (df_final in dataframes){
     print(h1)
     dev.off()
   }
+  print("Comparison Analysis Complete")
 }
 
 
