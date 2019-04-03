@@ -26,6 +26,9 @@ option_list = list(
   make_option(c("-o", "--out"), type="character", default="out", 
               help="output file name for all outlier outputs, do not include file extension", 
               metavar="character"),
+  make_option(c("--sig_cutoff"), type="integer", default="out", 
+              help="false discovery rate cutoff as decimal (ex. 0.05)", 
+              metavar="character"),
   make_option(c("--aes"), type="character", default="#B2182B", 
               help="aesthetic of distribution plot: color", metavar="character"),
   make_option(c("-u", "--upper_x_lime"), type="integer", default="20", 
@@ -38,28 +41,42 @@ option_list = list(
   make_option(c("-b", "--base_log"), type="character", default="not_log10", 
               help="if data is in 'log10' specify here and it will be transformed 
               into log2: options c(not_log10, log10)", metavar="character"),
-  make_option(c("--comparison"), type="character", default="Type", 
+  make_option(c("--comparison_a"), type="character", default="Type", 
               help="column name that identifies comparison (e.g. Region, Gender, Type)", 
               metavar="character"),
-  make_option(c("--group_1"), type="character", default="Tumor", 
-              help="Group one of comparison", metavar="character"),
-  make_option(c("--group_2"), type="character", default="Normal", 
-              help="Group 2 of comparison", metavar="character"),
-  make_option(c("--normal_tumor"), type="character", default="both", 
-              help="If your samples include both tumor and normal samples insert 'both'", 
+  make_option(c("--comparison_b"), type="character", default="Type", 
+              help="column name that identifies comparison (e.g. Region, Gender, Type)", 
               metavar="character"),
+  make_option(c("--group_1a"), type="character", default="Tumor", 
+              help="Group one of comparison", metavar="character"),
+  make_option(c("--group_2a"), type="character", default="Normal", 
+              help="Group 2 of comparison", metavar="character"),
+  make_option(c("--group_1b"), type="character", default="Tumor", 
+              help="Group one of comparison", metavar="character"),
+  make_option(c("--group_2b"), type="character", default="Normal", 
+              help="Group 2 of comparison", metavar="character"),
+  make_option(c("--group_comp"), type="character", default="one", 
+              help="number of groups: comparing one group to one, input 'one' or comparing 
+              two groups combined, input 'two'", metavar="character"),
+  make_option(c("--normal_tumor"), type="character", default="both", 
+              help="If your samples include both tumor and normal samples AND you want to 
+              isolate tumor samples insert 'both'. If you want to compare normal and tumor 
+              samples insert 'both_normal'. If you only have tumor samples insert 'tumor_only"
+              , metavar="character"),
   make_option(c("--tumor_column"), type="character", default="Type", 
               help="Name of tumor column (only required if there are normal and tumor 
               samples", metavar="character"),
   make_option(c("--tumor_group"), type="character", default="Tumor", 
               help="Name of tumor group (only reguired if there are normal and tumor 
               samples", metavar="character"),
-  make_option(c("--prot"), type="character", default="", 
+  make_option(c("--prot"), type="character", default="no", 
               help="yes if the input data is proteomic and includes isoforms with the 
               same gene name", metavar="character"),
   make_option(c("--analysis"), type="character", default="both", 
               help="Select which analysis you are performing, the respective tables and 
-              figures will be exported (both, comparison, or outlier)", metavar="character")
+              figures will be exported (both, comparison, or outlier)", metavar="character"),
+  make_option(c("--gene_list"), type="character", default="both", 
+              help="", metavar="character")
 ); 
 
 opt_parser = OptionParser(option_list=option_list);
@@ -79,10 +96,10 @@ out_outlier_plus <- paste(opt$o,"_outlier_up.tsv", sep="")
 out_outlier_minus <- paste(opt$o,"_outlier_down.tsv", sep="")
 out_outlier_both <- paste(opt$o,"_outlier_both.tsv", sep="")
 ggplot_title <- paste(opt$o, "Distribution", sep=" ")
-plus_sig_output <- paste(opt$o, "_up_", opt$group_1, "_", opt$group_2, "_sig_outliers.txt", sep="")
-minus_sig_output <- paste(opt$o, "_down_", opt$group_1, "_", opt$group_2, "_sig_outliers.txt", sep="")
-plus_heatmap <- paste(opt$o,"_up_heatmap_sig_", opt$group_1, "_", opt$group_2, ".png", sep="")
-minus_heatmap <- paste(opt$o,"_down_heatmap_sig_", opt$group_1, "_", opt$group_2, ".png", sep="")
+plus_sig_output <- paste(opt$o, "_up_", opt$group_1a, "_", opt$group_1b, "_", opt$group_2, "_", opt$group_2b, "_sig_outliers.txt", sep="")
+minus_sig_output <- paste(opt$o, "_down_", opt$group_1a, "_", opt$group_1b, "_", opt$group_2, "_", opt$group_2b,  "_sig_outliers.txt", sep="")
+plus_heatmap <- paste(opt$o,"_up_heatmap_sig_", opt$group_1a, "_", opt$group_1b, "_", opt$group_2, "_", opt$group_2b,  ".png", sep="")
+minus_heatmap <- paste(opt$o,"_down_heatmap_sig_", opt$group_1a, "_", opt$group_1b, "_", opt$group_2, "_", opt$group_2b,  ".png", sep="")
 
 
 ### Functions
@@ -116,7 +133,6 @@ agg_phospho <- function(df_outlier_agg, df_not_outlier_agg, tag){
     df_final_outlier$GeneSymbol <- as.factor(as.character(df_final_outlier$GeneSymbol))
     return(df_final_outlier)
   } else 
-    # Replace df_not_outlier_agg
     df_not_outlier_agg <- dplyr::select(df_not_outlier_agg, -GeneSymbol)
     df_outlier_agg <- dplyr::select(df_outlier_agg, -GeneSymbol.out)
     df_not_outlier_agg <- lapply(df_not_outlier_agg, function(x) ifelse(x == 0, 1, 0))
@@ -308,42 +324,92 @@ if (opt$analysis == "outlier" | opt$analysis == "both"){
 ### Group Comparison
 
 # Isolate Group Samples
-comparison <- grep(opt$comparison, colnames(meta_df_t))
-colnames(meta_df_t)[comparison] <- c('comp')
-sample <- grep(opt$tumor_column, colnames(meta_df_t))
-colnames(meta_df_t)[sample] <- c('samp')
-comparison <- grep(opt$comparison, colnames(meta_df_final_t))
-colnames(meta_df_final_t)[comparison] <- c('comp')
-sample <- grep(opt$tumor_column, colnames(meta_df_final_t))
-colnames(meta_df_final_t)[sample] <- c('samp')
+comparison_1 <- grep(opt$comparison_a, colnames(meta_df_t))
+colnames(meta_df_t)[comparison_1] <- c('comp_a')
+comparison_2 <- grep(opt$comparison_b, colnames(meta_df_t))
+colnames(meta_df_t)[comparison_2] <- c('comp_b')
+sample_1 <- grep(opt$tumor_column, colnames(meta_df_t))
+colnames(meta_df_t)[sample_1] <- c('samp')
 
-if (opt$normal_tumor == 'both'){
-  all_col <- meta_df_t[((meta_df_t$comp == opt$group_1 | meta_df_t$comp == opt$group_2) &
-                         (meta_df_t$samp == opt$tumor_group)), ]
+comparison_3 <- grep(opt$comparison_a, colnames(meta_df_final_t))
+colnames(meta_df_final_t)[comparison_3] <- c('comp_a')
+comparison_4 <- grep(opt$comparison_b, colnames(meta_df_final_t))
+colnames(meta_df_final_t)[comparison_4] <- c('comp_b')
+sample_2 <- grep(opt$tumor_column, colnames(meta_df_final_t))
+colnames(meta_df_final_t)[sample_2] <- c('samp')
+
+if (opt$normal_tumor == 'both' & opt$group_comp == 'one'){
+  all_col <- meta_df_t[((meta_df_t$comp_a == opt$group_1a | meta_df_t$comp_a == opt$group_2) &
+                          (meta_df_t$samp == opt$tumor_group)), ]
   all_col <- as.vector(all_col[,1])
-  outlier_group1_col <- meta_df_final_t[(meta_df_final_t$comp == opt$group_1 & meta_df_final_t$outlier == 'yes' &
+  outlier_group1_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_1a & meta_df_final_t$outlier == 'yes' &
                                            meta_df_final_t$samp == opt$tumor_group), ]
   outlier_group1_col <- (outlier_group1_col[,1])
-  not_outlier_group1_col <- meta_df_final_t[(meta_df_final_t$comp == opt$group_1 & meta_df_final_t$outlier == 'no' &
+  not_outlier_group1_col <- meta_df_final_t[(meta_df_final_t$cocomp_amp1 == opt$group_1a & meta_df_final_t$outlier == 'no' &
                                                meta_df_final_t$samp == opt$tumor_group), ]
   not_outlier_group1_col <- (not_outlier_group1_col[,1])
-  outlier_group2_col <- meta_df_final_t[(meta_df_final_t$comp == opt$group_2 & meta_df_final_t$outlier == 'yes' &
+  outlier_group2_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_2a & meta_df_final_t$outlier == 'yes' &
                                            meta_df_final_t$samp == opt$tumor_group), ]
   outlier_group2_col <- (outlier_group2_col[,1])
-  not_outlier_group2_col <- meta_df_final_t[(meta_df_final_t$comp == opt$group_2 & meta_df_final_t$outlier == 'no' &
+  not_outlier_group2_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_2a & meta_df_final_t$outlier == 'no' &
                                                meta_df_final_t$samp == opt$tumor_group), ]
   not_outlier_group2_col <- (not_outlier_group2_col[,1])
-  } else {
-    all_col <- meta_df_t[(meta_df_t$comp == opt$group_1 | meta_df_t$comp == opt$group_2), ]
-    all_col <- as.vector(all_col[,1])
-    outlier_group1_col <- meta_df_final_t[(meta_df_final_t$comp == opt$group_1 & meta_df_final_t$outlier == 'yes'), ]
-    outlier_group1_col <- (outlier_group1_col[,1])
-    not_outlier_group1_col <- meta_df_final_t[(meta_df_final_t$comp == opt$group_1 & meta_df_final_t$outlier == 'no'), ]
-    not_outlier_group1_col <- (not_outlier_group1_col[,1])
-    outlier_group2_col <- meta_df_final_t[(meta_df_final_t$comp == opt$group_2 & meta_df_final_t$outlier == 'yes'), ]
-    outlier_group2_col <- (outlier_group2_col[,1])
-    not_outlier_group2_col <- meta_df_final_t[(meta_df_final_t$comp == opt$group_2 & meta_df_final_t$outlier == 'no'), ]
-    not_outlier_group2_col <- (not_outlier_group2_col[,1])
+} else if (opt$normal_tumor == 'both' & opt$group_comp == 'two'){
+  all_col <- meta_df_t[(((meta_df_t$comp_a == opt$group_1a & meta_df_t$comp_b == opt$group_1b) | 
+                           (meta_df_t$comp_a == opt$group_2a & meta_df_t$comp_b == opt$group_2b)) &
+                          (meta_df_t$samp == opt$tumor_group)), ]
+  all_col <- as.vector(all_col[,1])
+  outlier_group1_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_1a & 
+                                           meta_df_final_t$comp_b == opt$group_1b &
+                                           meta_df_final_t$outlier == 'yes' &
+                                           meta_df_final_t$samp == opt$tumor_group), ]
+  outlier_group1_col <- (outlier_group1_col[,1])
+  not_outlier_group1_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_1a &
+                                               meta_df_final_t$comp_b == opt$group_1b &
+                                               meta_df_final_t$outlier == 'no' &
+                                               meta_df_final_t$samp == opt$tumor_group), ]
+  not_outlier_group1_col <- (not_outlier_group1_col[,1])
+  outlier_group2_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_2a &
+                                           meta_df_final_t$comp_b == opt$group_2b &
+                                           meta_df_final_t$outlier == 'yes' &
+                                           meta_df_final_t$samp == opt$tumor_group), ]
+  outlier_group2_col <- (outlier_group2_col[,1])
+  not_outlier_group2_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_2a &
+                                               meta_df_final_t$comp_b == opt$group_2b &
+                                               meta_df_final_t$outlier == 'no' &
+                                               meta_df_final_t$samp == opt$tumor_group), ]
+  not_outlier_group2_col <- (not_outlier_group2_col[,1])
+} else if ((opt$normal_tumor == 'both_normal' | opt$normal_tumor == 'tumor_only') & opt$group_comp == 'one'){
+  all_col <- meta_df_t[(meta_df_t$comp_a == opt$group_1a | meta_df_t$comp_a == opt$group_2a), ]
+  all_col <- as.vector(all_col[,1])
+  outlier_group1_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_1a & meta_df_final_t$outlier == 'yes'), ]
+  outlier_group1_col <- (outlier_group1_col[,1])
+  not_outlier_group1_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_1a & meta_df_final_t$outlier == 'no'), ]
+  not_outlier_group1_col <- (not_outlier_group1_col[,1])
+  outlier_group2_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_2a & meta_df_final_t$outlier == 'yes'), ]
+  outlier_group2_col <- (outlier_group2_col[,1])
+  not_outlier_group2_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_2a & meta_df_final_t$outlier == 'no'), ]
+  not_outlier_group2_col <- (not_outlier_group2_col[,1])
+} else if ((opt$normal_tumor == 'both_normal' | opt$normal_tumor == 'tumor_only') & opt$group_comp == 'two'){
+  all_col <- meta_df_t[((meta_df_t$comp_a == opt$group_1a & meta_df_t$comp_b == opt$group_1b) | 
+                          (meta_df_t$comp_a == opt$group_2a & meta_df_t$comp_b == opt$group_2b)), ]
+  all_col <- as.vector(all_col[,1])
+  outlier_group1_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_1a & 
+                                           meta_df_final_t$comp_b == opt$group_1b &
+                                           meta_df_final_t$outlier == 'yes'), ]
+  outlier_group1_col <- (outlier_group1_col[,1])
+  not_outlier_group1_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_1a &
+                                               meta_df_final_t$comp_b == opt$group_1b &
+                                               meta_df_final_t$outlier == 'no'), ]
+  not_outlier_group1_col <- (not_outlier_group1_col[,1])
+  outlier_group2_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_2a & 
+                                           meta_df_final_t$comp_b == opt$group_2b &
+                                           meta_df_final_t$outlier == 'yes'), ]
+  outlier_group2_col <- (outlier_group2_col[,1])
+  not_outlier_group2_col <- meta_df_final_t[(meta_df_final_t$comp_a == opt$group_2a & 
+                                               meta_df_final_t$comp_b == opt$group_2b &
+                                               meta_df_final_t$outlier == 'no'), ]
+  not_outlier_group2_col <- (not_outlier_group2_col[,1])
 }
 
 all_col <- as.vector(all_col[[1]])
@@ -383,7 +449,7 @@ for (df_final in dataframes){
                                   (outlier_group2_col),
                                   (not_outlier_group1_col),
                                   (not_outlier_group2_col))]
-
+  
   # Outlier group1 
   outlier_group1_col_number <- which(colnames(df_final) %in% (outlier_group1_col))
   outlier_group_1_df <- df_final[outlier_group1_col_number]
@@ -455,8 +521,8 @@ for (df_final in dataframes){
   # Get significant outliers
   # If p_value_corrected is greater than FDR cutoff, insert yes (significant outlier)
   df_fraction_outlier$sig_outlier_q <- NA
-  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value <= 0.05] <- "yes"
-  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value > 0.05] <- "no"
+  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value <= 0.01] <- "yes"
+  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value > 0.01] <- "no"
   
   # If fraction group 1 mean is greater than group 2 fraction mean, insert yes (significant outlier)
   df_fraction_outlier$sig_outlier_mean[(df_fraction_outlier$group1_fraction_mean) > (df_fraction_outlier$group2_fraction_mean)] <- "yes"
@@ -464,12 +530,12 @@ for (df_final in dataframes){
   
   ## Length of list of signfiicant outliers will be the number of outliers = print this
   df_fraction_outlier <- filter(df_fraction_outlier,
-                                     sig_outlier_q == 'yes' & sig_outlier_mean == 'yes')
+                                sig_outlier_q == 'yes' & sig_outlier_mean == 'yes')
   df_fraction_outlier <- df_fraction_outlier[order(df_fraction_outlier$q_value, decreasing = FALSE), ]
   
   # Create list of genes and FDR 
   sig_outlier_genes_q_value <- df_fraction_outlier[c(1, ncol(df_fraction_outlier)-2)]
-
+  
   if (nrow(sig_outlier_genes_q_value) == 0) {
     print("There are no significant values for this comparison.")
     next
@@ -484,43 +550,73 @@ for (df_final in dataframes){
   fraction_heat <- fraction_heat_1[,-1]
   rownames(fraction_heat) <- fraction_heat_1[,1]
   fraction_heat <- dplyr::select(fraction_heat, -outlier_group1, -not_outlier_group1, -outlier_group2,
-                                      -not_outlier_group2, -count_outliers, -group1_fraction_mean, -group2_fraction_mean,
-                                      -p_value, -q_value, -sig_outlier_q, -sig_outlier_mean)
+                                 -not_outlier_group2, -count_outliers, -group1_fraction_mean, -group2_fraction_mean,
+                                 -p_value, -q_value, -sig_outlier_q, -sig_outlier_mean)
   is.na(fraction_heat) <- sapply(fraction_heat, is.infinite)
   fraction_heat[is.na(fraction_heat)]<-0
-  
   fraction_heat[] <- lapply(fraction_heat, function(x) as.numeric(x))
   fraction_heat <- as.matrix(fraction_heat)
   
   ## Make annotation bar (pull from meta data)
   if (opt$normal_tumor == 'both'){
+    meta_df_t$comp[meta_df_t$comp_a == ""] <- NA
+    meta_df_t$comp[meta_df_t$comp_b == ""] <- NA
     heat_filter <- meta_df_t[(meta_df_t$samp == opt$tumor_group), ]
-  } else {
+  } else if (opt$normal_tumor == 'both_normal' | opt$normal_tumor == 'tumor_only') {
+    meta_df_t$comp[meta_df_t$comp_a == ""] <- NA
+    meta_df_t$comp[meta_df_t$comp_b == ""] <- NA
     heat_filter <- meta_df_t
   }
-
+  
+  
   #comparison <- grep(opt$comparison, colnames(meta_df_t))
   #colnames(meta_df_t)[comparison] <- c('comp')
   
-  heat_annotation <- as.data.frame(heat_filter$comp)
-  colnames(heat_annotation)[1] <- c('comp')
-  heat_annotation <- as.data.frame(heat_annotation[with(heat_annotation, order(comp)),])
-  colnames(heat_annotation)[1] <- c('comp')
+  if (opt$group_comp == "one"){
+    heat_annotation <- as.data.frame(heat_filter$comp_a)
+    colnames(heat_annotation)[1] <- c('comp')
+    ordering <- c(opt$group_1a, opt$group_2a)
+    heat_annotation <- as.data.frame(heat_annotation[order(match(heat_annotation$comp, ordering)), ])
+    colnames(heat_annotation)[1] <- c('comp')
+    heat_color <- c(color1, "gray85")
+    heat_annotation$comp <- relevel(heat_annotation$comp, opt$group_1a)
+    heat_annotation$comp <- droplevels(heat_annotation$comp)
+    names(heat_color) <- levels(heat_annotation$comp)
+    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Heat = heat_annotation$comp),
+                                         col = list(Heat = heat_color))
+
+  } else {
+    heat_annotation <- heat_filter
+    heat_annotation <- heat_annotation[((heat_annotation$comp_a == opt$group_1a & 
+                                           heat_annotation$comp_b == opt$group_1b) |
+                                          (heat_annotation$comp_a == opt$group_2a &
+                                             heat_annotation$comp_b == opt$group_2b)), ]
+    heat_annotation$comp <- paste(heat_annotation$comp_a, heat_annotation$comp_b, sep = "_")
+    heat_annotation <- as.data.frame(heat_annotation$comp)
+    colnames(heat_annotation)[1] <- c('comp')
+    heat_annotation$comp <- as.factor(as.character(heat_annotation$comp))
+    comp_a <- paste(opt$group_1a, opt$group_1b, sep = "_")
+    comp_b <- paste(opt$group_2a, opt$group_2b, sep = "_")
+    levels(heat_annotation$comp) <- c(comp_a, comp_b)
+    ordering <- c(comp_a, comp_b)
+    heat_annotation <- as.data.frame(heat_annotation[order(match(heat_annotation$comp, ordering)), ])
+    colnames(heat_annotation)[1] <- c('comp')
+    heat_color <- c(color1, "gray85")
+    heat_annotation$comp <- relevel(heat_annotation$comp, comp_a)
+    names(heat_color) <- levels(heat_annotation$comp)
+    heat_annotation$comp <- droplevels(heat_annotation$comp)
+    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Heat = heat_annotation$comp), col = list(Heat = heat_color))
+  }
   
-  heat_color <- c(color1, "gray85")
-  heat_annotation$comp <- droplevels(heat_annotation$comp)
-  names(heat_color) <- levels(heat_annotation$comp)
-  heat_annotation <- HeatmapAnnotation(df = data.frame(Heat = heat_annotation$comp),
-                                            col = list(Heat = heat_color))
   # Set gene printing options
-  if (nrow(fraction_heat) < 25){
+  if (nrow(fraction_heat) < 30){
     heat_font <- 6
   } else {
     heat_font <- 0
   }
   
   frac_heat_1 <- Heatmap(fraction_heat,
-                         top_annotation = heat_annotation,
+                         top_annotation = heat_annotation_final,
                          show_column_names = F, 
                          show_row_names = T,
                          cluster_rows = F,
@@ -545,5 +641,4 @@ for (df_final in dataframes){
   }
   print("Comparison Analysis Complete")
 }
-
 
