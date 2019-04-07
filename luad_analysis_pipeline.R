@@ -50,17 +50,17 @@ option_list = list(
   make_option(c("--comparison_c"), type="character", default=NULL, 
               help="column name that identifies comparison (e.g. Region, Gender, Type)", 
               metavar="character"),
-  make_option(c("--group_1a"), type="character", default="Tumor", 
+  make_option(c("--group_1a"), type="character", default=NULL, 
               help="Group one of comparison", metavar="character"),
-  make_option(c("--group_1b"), type="character", default="Normal", 
+  make_option(c("--group_1b"), type="character", default=NULL, 
               help="Group 2 of comparison", metavar="character"),
-  make_option(c("--group_1c"), type="character", default="Normal", 
+  make_option(c("--group_1c"), type="character", default=NULL, 
               help="Group 2 of comparison", metavar="character"),
   make_option(c("--group_2a"), type="character", default=NULL, 
               help="Group one of comparison", metavar="character"),
   make_option(c("--group_2b"), type="character", default=NULL, 
               help="Group 2 of comparison", metavar="character"),
-  make_option(c("--group_2c"), type="character", default="Normal", 
+  make_option(c("--group_2c"), type="character", default=NULL, 
               help="Group 2 of comparison", metavar="character"),
   make_option(c("--group_comp"), type="character", default="one", 
               help="number of groups: comparing one group to one, input 'one' or comparing 
@@ -82,7 +82,7 @@ option_list = list(
   make_option(c("--analysis"), type="character", default="both", 
               help="Select which analysis you are performing, the respective tables and 
               figures will be exported (both, comparison, or outlier)", metavar="character"),
-  make_option(c("--gene_list"), type="character", default=NULL, 
+  make_option(c("--gene_list"), type="character", default="no", 
               help="", metavar="character")
 ); 
 
@@ -103,10 +103,18 @@ out_outlier_plus <- paste(opt$o,"_outlier_up.tsv", sep="")
 out_outlier_minus <- paste(opt$o,"_outlier_down.tsv", sep="")
 out_outlier_both <- paste(opt$o,"_outlier_both.tsv", sep="")
 ggplot_title <- paste(opt$o, "Distribution", sep=" ")
-plus_sig_output <- paste(opt$o, "_up_", opt$group_1a, "_", opt$group_1b, "_", opt$group_2, "_", opt$group_2b, "_sig_outliers.txt", sep="")
-minus_sig_output <- paste(opt$o, "_down_", opt$group_1a, "_", opt$group_1b, "_", opt$group_2, "_", opt$group_2b,  "_sig_outliers.txt", sep="")
-plus_heatmap <- paste(opt$o,"_up_heatmap_sig_", opt$group_1a, "_", opt$group_1b, "_", opt$group_2, "_", opt$group_2b,  ".png", sep="")
-minus_heatmap <- paste(opt$o,"_down_heatmap_sig_", opt$group_1a, "_", opt$group_1b, "_", opt$group_2, "_", opt$group_2b,  ".png", sep="")
+plus_sig_output <- paste(opt$o, "_up_", opt$group_1a, "_", opt$group_1b, "_",
+                         opt$group_2a, "_", opt$group_2b, "_", opt$group_3a, "_", 
+                         opt$group_3b, "_sig_outliers.txt", sep="")
+minus_sig_output <- paste(opt$o, "_down_", opt$group_1a, "_", opt$group_1b, "_", 
+                          opt$group_2a, "_", opt$group_2b, "_", opt$group_3a, "_", 
+                          opt$group_3b,  "_sig_outliers.txt", sep="")
+plus_heatmap <- paste(opt$o,"_up_heatmap_sig_", opt$group_1a, "_", opt$group_1b, "_",
+                      opt$group_2a, "_", opt$group_2b, "_", opt$group_3a, "_", 
+                      opt$group_3b, ".png", sep="")
+minus_heatmap <- paste(opt$o,"_down_heatmap_sig_", opt$group_1a, "_", opt$group_1b, 
+                       "_", opt$group_2a, "_", opt$group_2b, "_", opt$group_3a, 
+                       "_", opt$group_3b,  ".png", sep="")
 
 
 ### Functions
@@ -609,9 +617,15 @@ for (df_final in dataframes){
                                 sig_outlier_q == 'yes' & sig_outlier_mean == 'yes')
   df_fraction_outlier <- df_fraction_outlier[order(df_fraction_outlier$q_value, decreasing = FALSE), ]
   
-  # Create list of genes and FDR 
-  sig_outlier_genes_q_value <- df_fraction_outlier[c(1, ncol(df_fraction_outlier)-2)]
-  
+  # Create list of genes and FDR
+  if (opt$gene_list == "no"){
+    sig_outlier_genes_q_value <- df_fraction_outlier[c(1, ncol(df_fraction_outlier)-2)]
+  } else {
+    genes <- scan(opt$gene_list, character(), quote = "")
+    sig_outlier_genes_q_value <- df_fraction_outlier[df_fraction_outlier$GeneSymbol %in% genes,]
+    sig_outlier_genes_q_value <- sig_outlier_genes_q_value[c(1, ncol(df_fraction_outlier)-2)]
+  }
+
   if (nrow(sig_outlier_genes_q_value) == 0) {
     print("There are no significant values for this comparison.")
     next
@@ -622,7 +636,17 @@ for (df_final in dataframes){
   # Make gene symbol row.names 
   # Isolate values
   # Make values into matrix
-  fraction_heat_1 <- df_fraction_outlier
+  
+  
+  #fraction_heat_1 <- df_fraction_outlier
+  
+  if (opt$gene_list == "no"){
+    fraction_heat_1 <- df_fraction_outlier
+  } else {
+    genes <- scan(opt$gene_list, character(), quote = "")
+    fraction_heat_1 <- df_fraction_outlier[df_fraction_outlier$GeneSymbol %in% genes,]
+  }
+  
   fraction_heat <- fraction_heat_1[,-1]
   rownames(fraction_heat) <- fraction_heat_1[,1]
   fraction_heat <- dplyr::select(fraction_heat, -outlier_group1, -not_outlier_group1, -outlier_group2,
@@ -741,4 +765,3 @@ for (df_final in dataframes){
   }
   print("Comparison Analysis Complete")
 }
-
