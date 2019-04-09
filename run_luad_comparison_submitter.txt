@@ -1,0 +1,7 @@
+Region  Region.of.Origin  asian  western
+Gender  Gender  female  male
+Smoking Smoking.Status smoker non-smoker
+Smoking_History Smoking.History Current smoker: Includes daily and non-daily smokers  Lifelong non-smoker: Less than 100 cigarettes smoked in lifetime
+TP53  TP53.mutation.status 1 0
+KRAS  KRAS.mutation.status 1 0
+EGFR  EGFR.mutation.status 1 0
