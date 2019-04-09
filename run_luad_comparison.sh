@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat ./submitter_run_luad.txt | while read -r -a myArray
+cat ./run_luad_comparison_array.txt | while read -r -a myArray
 do
 name="${myArray[0]}"
 comparison_a="${myArray[1]}"
