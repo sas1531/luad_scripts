@@ -334,6 +334,16 @@ not_outlier_group2_col <- as.vector(not_outlier_group2_col[[1]])
 dataframes <- list(df_final_plus, df_final_minus)
 
 for (df_final in dataframes){
+  
+  # Exit if there are no samples in any group
+  if (length(outlier_group1_col) == 0 | length(not_outlier_group1_col) == 0) { 
+    print("Not enough observations in Group 1: length = 0")
+    next
+  } else if (length(outlier_group2_col) == 0 | length(not_outlier_group2_col) == 0) { 
+    print("Not enough observations in Group 2: length = 0")
+    next
+  }
+  
   # Set Parameters for plus/minus output 
   if (identical(df_final, df_final_plus) == TRUE){
     color1 <-  "red4"
@@ -399,13 +409,30 @@ for (df_final in dataframes){
   df_final$count_outliers <- rowSums((outlier_count[, 2:(ncol(outlier_count))])!=0, na.rm = TRUE)
   df_final$count_outliers <- as.numeric(df_final$count_outliers)
   
+  #print(head(df_final))
+  
   ### Create outlier fractions (outlier divided by total)
   # Filter so that you have the combined samples (summed) for outlier and not_outlier (use grep)
   # Divide the outlier genes by the combined samples to create outlier fractions
   # Isolate genes that are upregulated in group
-  df_names <- as.vector(c(outlier_group1_col, outlier_group2_col))
+
+  df_names <- as.vector(c(outlier_group1_col))
   df_names <- gsub('.{8}$', '', df_names)
-  combine_samples <- sapply(df_names, function(xx) rowSums(df_final[,grep(xx, names(df_final)), drop=FALSE], na.rm = TRUE))
+  collapse_1 <- cbind(outlier_group_1_df, not_outlier_group_1_df)
+  combine_samples_1 <- sapply(df_names, function(xx) rowSums(collapse_1[,grep(xx, names(collapse_1)), drop=FALSE], na.rm = TRUE))
+  combine_samples_1 <- as.data.frame(combine_samples_1)
+  df_names <- as.vector(c(outlier_group2_col))
+  df_names <- gsub('.{8}$', '', df_names)
+  collapse_2 <- cbind(outlier_group_2_df, not_outlier_group_2_df)
+  combine_samples_2 <- sapply(df_names, function(xx) rowSums(collapse_2[,grep(xx, names(collapse_2)), drop=FALSE], na.rm = TRUE))
+  combine_samples_2 <- as.data.frame(combine_samples_2)
+  combine_samples <- cbind(combine_samples_1, combine_samples_2)
+  
+  #df_names <- as.vector(c(outlier_group1_col, outlier_group2_col))
+  #df_names <- gsub('.{8}$', '', df_names)
+  #combine_samples <- sapply(df_names, function(xx) rowSums(df_final[,grep(xx, names(df_final)), drop=FALSE], na.rm = TRUE))
+
+  ###
   combine_samples <- as.data.frame(combine_samples)
   outlier_samples_only <- df_final[, c(1, 2:((ncol(combine_samples))+1))]
   fraction_outlier <- cbind(outlier_samples_only[1], round((outlier_samples_only[-1]/combine_samples), 6))
@@ -509,7 +536,12 @@ for (df_final in dataframes){
   #colnames(meta_df_t)[comparison] <- c('comp')
   
   if (opt$group_comp == "one"){
-    heat_annotation <- as.data.frame(heat_filter$comp_a)
+    heat_annotation <- heat_filter
+    heat_annotation <- heat_annotation[((heat_annotation$comp_a == opt$group_1a) |
+                                          (heat_annotation$comp_a == opt$group_2a)), ]
+    heat_annotation <- as.data.frame(heat_annotation)
+    heat_annotation[, 'comp_a'] <- as.factor(heat_annotation[, 'comp_a'])
+    heat_annotation <- as.data.frame(heat_annotation$comp_a)
     colnames(heat_annotation)[1] <- c('comp')
     levels(heat_annotation)[levels(heat_annotation)==opt$group_1a] <- opt$group_1a
     levels(heat_annotation)[levels(heat_annotation)==opt$group_2a] <- opt$group_2a
@@ -518,7 +550,7 @@ for (df_final in dataframes){
     colnames(heat_annotation)[1] <- c('comp')
     heat_color <- c(color1, "gray85")
     heat_annotation$comp <- relevel(heat_annotation$comp, opt$group_1a)
-    heat_annotation$comp <- droplevels(heat_annotation$comp)
+    heat_annotation[, 'comp'] <- factor(heat_annotation[, 'comp'])
     names(heat_color) <- levels(heat_annotation$comp)
     heat_annotation_final <- HeatmapAnnotation(df = data.frame(Heat = heat_annotation$comp),
                                                col = list(Heat = heat_color))
@@ -528,8 +560,9 @@ for (df_final in dataframes){
                                            heat_annotation$comp_b == opt$group_1b) |
                                           (heat_annotation$comp_a == opt$group_2a &
                                              heat_annotation$comp_b == opt$group_2b)), ]
-
     heat_annotation$comp <- paste(heat_annotation$comp_a, heat_annotation$comp_b, sep = "_")
+    heat_annotation <- as.data.frame(heat_annotation)
+    heat_annotation[, 'comp'] <- as.factor(heat_annotation[, 'comp'])
     heat_annotation <- as.data.frame(heat_annotation$comp)
     colnames(heat_annotation)[1] <- c('comp')
     heat_annotation$comp <- as.factor(as.character(heat_annotation$comp))
@@ -541,8 +574,8 @@ for (df_final in dataframes){
     heat_annotation <- as.data.frame(heat_annotation[order(match(heat_annotation$comp, ordering)), ])
     colnames(heat_annotation)[1] <- c('comp')
     heat_color <- c(color1, "gray85")
+    heat_annotation[, 'comp'] <- factor(heat_annotation[, 'comp'])
     names(heat_color) <- levels(heat_annotation$comp)
-    heat_annotation$comp <- droplevels(heat_annotation$comp)
     heat_annotation_final <- HeatmapAnnotation(df = data.frame(Heat = heat_annotation$comp), col = list(Heat = heat_color))
   } else if (opt$group_comp == "three") {
     heat_annotation <- heat_filter
@@ -553,6 +586,8 @@ for (df_final in dataframes){
                                              heat_annotation$comp_b == opt$group_2b &
                                              heat_annotation$comp_c == opt$group_2c)), ]
     heat_annotation$comp <- paste(heat_annotation$comp_a, heat_annotation$comp_b, sep = "_")
+    heat_annotation <- as.data.frame(heat_annotation)
+    heat_annotation[, 'comp'] <- as.factor(heat_annotation[, 'comp'])
     heat_annotation <- as.data.frame(heat_annotation$comp)
     colnames(heat_annotation)[1] <- c('comp')
     heat_annotation$comp <- as.factor(as.character(heat_annotation$comp))
@@ -565,8 +600,8 @@ for (df_final in dataframes){
     colnames(heat_annotation)[1] <- c('comp')
     heat_color <- c(color1, "gray85")
     heat_annotation$comp <- relevel(heat_annotation$comp, comp_a)
+    heat_annotation[, 'comp'] <- factor(heat_annotation[, 'comp'])
     names(heat_color) <- levels(heat_annotation$comp)
-    heat_annotation$comp <- droplevels(heat_annotation$comp)
     heat_annotation_final <- HeatmapAnnotation(df = data.frame(Heat = heat_annotation$comp), col = list(Heat = heat_color))
   }
   
