@@ -15,36 +15,35 @@ options(warn=1)
 
 # Set up command line
 option_list = list(
-  make_option(c("-f", "--file"), type="character", default=NULL,
-              help="dataset file name", metavar="character"),
-  make_option(c("--row_gene"), type="integer", default=1,
-              help="index number of row where gene values begins", metavar="character"),
-  make_option(c("--column_gene"), type="integer", default=1,
-              help="index number of column where sample values begins", metavar="character"),
-  make_option(c("--meta_column"), type="integer", default=1,
-              help="index number of column where gene IDs are located", metavar="character"),
-  make_option(c("-o", "--out"), type="character", default="out",
-              help="output file name for all outlier outputs, do not include file extension",
+  make_option(c("-f", "--file"), type="character", default=NULL, 
+              help="Input file name", metavar="character"),
+  make_option(c("--skip"), type="character", default=2, 
+              help="How many lines to skip, not including the header", metavar="integer"),
+  make_option(c("--row_gene"), type="integer", default=1, 
+              help="Row number where the genes and values begin", metavar="character"),
+  make_option(c("--column_gene"), type="integer", default=1, 
+              help="Column number where the genes and values begin", metavar="character"),
+  make_option(c("--meta_column"), type="integer", default=1, 
+              help="Column number where gene IDs are located for labelling", metavar="character"),
+  make_option(c("-o", "--out"), type="character", default="out", 
+              help="Output file prefix for all outlier outputs, do not include file extension", 
               metavar="character"),
-  make_option(c("--sig_cutoff"), type="integer", default="out",
-              help="false discovery rate cutoff as decimal (ex. 0.05)",
-              metavar="character"),
-  make_option(c("--aes"), type="character", default="#B2182B",
+  make_option(c("--aes"), type="character", default="#B2182B", 
               help="aesthetic of distribution plot: color", metavar="character"),
-  make_option(c("-u", "--upper_x_lime"), type="integer", default="20",
-              help="upper x limit for distribution plot", metavar="character"),
-  make_option(c("-l", "--lower_x_lim"), type="integer", default="-20",
-              help="lower x limit for distribution plot", metavar="character"),
-  make_option(c("--tag_phospho"), type="character", default="",
-              help="tag for phospho data: write 'phospho' if the data is phosphoproteomic
+  make_option(c("-u", "--upper_x_lim"), type="integer", default="20", 
+              help="Upper x limit for distribution plot", metavar="character"),
+  make_option(c("-l", "--lower_x_lim"), type="integer", default="-20", 
+              help="Lower x limit for distribution plot", metavar="character"),
+  make_option(c("--tag_phospho"), type="character", default="", 
+              help="Tag for phospho data: write 'phospho' if the data is phosphoproteomic
               and 'not_phospho' if it isn't", metavar="character"),
-  make_option(c("-b", "--base_log"), type="character", default="not_log10",
-              help="if data is in 'log10' specify here and it will be transformed
+  make_option(c("-b", "--base_log"), type="character", default="not_log10", 
+              help="if data is in 'log10' specify here and it will be transformed 
               into log2: options c(not_log10, log10)", metavar="character"),
-  make_option(c("--prot"), type="character", default="no",
-              help="yes if the input data is proteomic and includes isoforms with the
+  make_option(c("--prot"), type="character", default="no", 
+              help="Yes if the input data is proteomic and includes isoforms with the 
               same gene name", metavar="character")
-  );
+  ); 
 
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
@@ -54,7 +53,7 @@ if (is.null(opt$file)){
   stop("At least one argument must be supplied (input file).n", call.=FALSE)
 }
 
-### Establish names
+### Establish names 
 out_dataframe <- paste(opt$o, ".tsv", sep="")
 out_names <- paste(opt$o,"_names.txt", sep="")
 out_meta_data <- paste(opt$o,"_meta.tsv", sep="")
@@ -70,7 +69,7 @@ ggplot_title <- paste(opt$o, "Distribution", sep=" ")
 log10_transform <- function(df_gene, log){
   if (log == 'log10'){
     GeneSymbol <- df_gene[, 2]
-    df_gene_log10 <- lapply(df_gene[,c(3:ncol(df_gene))],
+    df_gene_log10 <- lapply(df_gene[,c(3:ncol(df_gene))], 
                             function(x) as.numeric(as.character(x)))
     df_gene_log <- lapply(df_gene_log10, function(x) (10**(x)))
     df_gene_log2 <- lapply(df_gene_log,function(x) (log2(x)))
@@ -82,32 +81,32 @@ log10_transform <- function(df_gene, log){
 }
 
 ### Phosphosite aggregation function
-# If data is phosphoproteomic, aggregate and sum outlier values
+# If data is phosphoproteomic, aggregate and sum outlier values 
 agg_phospho <- function(df_outlier_agg, df_not_outlier_agg, tag){
   if (tag == 'phospho'){
-    df_final_outlier_agg <- aggregate(. ~ GeneSymbol.out, data = df_outlier_agg,
+    df_final_outlier_agg <- aggregate(. ~ GeneSymbol.out, data = df_outlier_agg, 
                                       count_outliers, na.action = na.pass)
-    df_final_not_outlier_agg <- aggregate(. ~ GeneSymbol, data = df_not_outlier_agg,
+    df_final_not_outlier_agg <- aggregate(. ~ GeneSymbol, data = df_not_outlier_agg, 
                                           count_not_outliers, na.action = na.pass)
     df_final_outlier <- cbind(df_final_not_outlier_agg, df_final_outlier_agg)
     df_final_outlier <- dplyr::select(df_final_outlier, -GeneSymbol.out)
     df_final_outlier$GeneSymbol <- as.factor(as.character(df_final_outlier$GeneSymbol))
     return(df_final_outlier)
-  } else
+  } else 
     df_not_outlier_agg <- dplyr::select(df_not_outlier_agg, -GeneSymbol)
-  df_outlier_agg <- dplyr::select(df_outlier_agg, -GeneSymbol.out)
-  df_not_outlier_agg <- lapply(df_not_outlier_agg, function(x) ifelse(x == 0, 1, 0))
-  df_final_outlier <- cbind(df_genesymbol, df_not_outlier_agg)
-  df_final_outlier <- cbind(df_final_outlier, df_outlier_agg)
-  colnames(df_final_outlier)[1] <- "GeneSymbol"
-  return(df_final_outlier)
+    df_outlier_agg <- dplyr::select(df_outlier_agg, -GeneSymbol.out)
+    df_not_outlier_agg <- lapply(df_not_outlier_agg, function(x) ifelse(x == 0, 1, 0))
+    df_final_outlier <- cbind(df_genesymbol, df_not_outlier_agg)
+    df_final_outlier <- cbind(df_final_outlier, df_outlier_agg)
+    colnames(df_final_outlier)[1] <- "GeneSymbol"
+    return(df_final_outlier)
 }
 
 ### Tidy Data
 
 # Isolate only the gene ID and sample columns
-# Export this as a new dataframe
-df <- read.table(opt$f, skip = 2, header = TRUE, sep = "\t", fill = TRUE)
+# Export this as a new dataframe 
+df <- read.table(opt$f, skip = opt$skip, header = TRUE, sep = "\t", fill = TRUE)
 df <- as.data.frame(df)
 colnames(df)[opt$meta_column] <- "GeneSymbol"
 df_gene <- df[c(opt$row_gene:nrow(df)), c(1, opt$meta_column, opt$column_gene:ncol(df))]
@@ -127,21 +126,21 @@ df_names <- colnames(df_gene[3:ncol(df_gene)])
 # Isolate meta data
 meta_df <- df[c(1:((opt$row_gene)-1)), c(1, opt$meta_column, opt$column_gene:ncol(df))]
 
-### Visualize Distribution
+### Visualize Distribution 
 
 # Gather only the values in the dataframe, use the sample name as a key
 df_long <- gather(df_gene[3:ncol(df_gene)], na.rm = TRUE)
 df_long$value <- as.numeric(as.character(df_long$value))
 
 # Create plot
-# Options given to optimize
+# Options given to optimize 
 df_hist <- ggplot(data = df_long) +
-  geom_histogram(mapping = aes(x = value), fill = opt$aes, binwidth = 0.01) +
-  xlim(opt$l,opt$u) + ylab("Count") + xlab('Normalized Value') +
+  geom_histogram(mapping = aes(x = value), fill = opt$aes, binwidth = 0.01) + 
+  xlim(opt$l,opt$u) + ylab("Count") + xlab('Normalized Value') + 
   ggtitle(ggplot_title) + theme(plot.title = element_text(hjust = 0.5))
 
 
-### Perform Outlier Analysis
+### Perform Outlier Analysis 
 
 # Create dataframe without gene ids and one with only gene ids
 df_stats <- df_gene[,3:ncol(df_gene)]
@@ -183,7 +182,7 @@ df_outlier_minus <- cbind(df_outlier_minus, count = rowSums(df_outlier_minus))
 df_outlier_gene_plus <- cbind(df_genesymbol, df_outlier_plus)
 df_outlier_gene_minus <- cbind(df_genesymbol, df_outlier_minus)
 
-# Aggregate phosphosites
+# Aggregate phosphosites 
 count_not_outliers <-  function(x) {length(which(x==0))}
 count_outliers <- function(x) {length(which(x==1))}
 

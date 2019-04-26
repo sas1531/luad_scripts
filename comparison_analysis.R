@@ -22,53 +22,54 @@ option_list = list(
   make_option(c("--meta"), type="character", default=NULL, 
               help="meta dataset file path from outlier analysis", metavar="character"),
   make_option(c("-o", "--out"), type="character", default="out", 
-              help="output file name for all comparison outputs, do not include file extension", 
+              help="output file prefix for all comparison outputs, do not include file extension", 
               metavar="character"),
-  make_option(c("--sig_cutoff"), type="integer", default="out", 
+  make_option(c("--sig_cutoff"), type="character", default='0.05', 
               help="false discovery rate cutoff as decimal (ex. 0.05)", 
               metavar="character"),
-  make_option(c("--aes"), type="character", default="#B2182B", 
-              help="aesthetic of distribution plot: color", metavar="character"),
   make_option(c("--comparison_a"), type="character", default="Type", 
-              help="column name that identifies comparison (e.g. Region, Gender, Type)", 
+              help="Column name that identifies comparison A (e.g. Region, Gender, Type)", 
               metavar="character"),
   make_option(c("--comparison_b"), type="character", default=NULL, 
-              help="column name that identifies comparison (e.g. Region, Gender, Type)", 
+              help="Column name that identifies comparison B (e.g. Region, Gender, Type)", 
               metavar="character"),
   make_option(c("--comparison_c"), type="character", default=NULL, 
-              help="column name that identifies comparison (e.g. Region, Gender, Type)", 
+              help="column name that identifies comparison C (e.g. Region, Gender, Type)", 
               metavar="character"),
   make_option(c("--group_1a"), type="character", default=NULL, 
-              help="Group one of comparison", metavar="character"),
+              help="Group one of comparison A", metavar="character"),
   make_option(c("--group_1b"), type="character", default=NULL, 
-              help="Group 2 of comparison", metavar="character"),
+              help="Group 1 of comparison B", metavar="character"),
   make_option(c("--group_1c"), type="character", default=NULL, 
-              help="Group 2 of comparison", metavar="character"),
+              help="Group 1 of comparison C", metavar="character"),
   make_option(c("--group_2a"), type="character", default=NULL, 
-              help="Group one of comparison", metavar="character"),
+              help="Group two of comparison A", metavar="character"),
   make_option(c("--group_2b"), type="character", default=NULL, 
-              help="Group 2 of comparison", metavar="character"),
+              help="Group two of comparison B", metavar="character"),
   make_option(c("--group_2c"), type="character", default=NULL, 
-              help="Group 2 of comparison", metavar="character"),
+              help="Group two of comparison C", metavar="character"),
   make_option(c("--group_comp"), type="character", default="one", 
-              help="number of groups: comparing one group to one, input 'one' or comparing 
-              two groups combined, input 'two'", metavar="character"),
+              help="Number of groups: comparing one group to one, input 'one' or comparing 
+              two groups combined, input 'two', or comparing three groups combined, input 
+              'three'", metavar="character"),
   make_option(c("--normal_tumor"), type="character", default="both", 
               help="If your samples include both tumor and normal samples AND you want to 
               isolate tumor samples insert 'both'. If you want to compare normal and tumor 
               samples insert 'both_normal'. If you only have tumor samples insert 'tumor_only"
               , metavar="character"),
   make_option(c("--tumor_column"), type="character", default="Type", 
-              help="Name of tumor column (only required if there are normal and tumor 
-              samples", metavar="character"),
+              help="Name of column that indicates whether or not the sample is a tumor sample 
+              or normal sample (only required if there are normal and tumor samples", 
+              metavar="character"),
   make_option(c("--tumor_group"), type="character", default="Tumor", 
-              help="Name of tumor group (only reguired if there are normal and tumor 
-              samples", metavar="character"),
+              help="Name of tumor group in tumor column (only reguired if there are normal 
+              and tumor samples", metavar="character"),
   make_option(c("--prot"), type="character", default="no", 
-              help="yes if the input data is proteomic and includes isoforms with the 
+              help="'yes' if the input data is proteomic and includes isoforms with the 
               same gene name", metavar="character"),
   make_option(c("--gene_list"), type="character", default="no", 
-              help="path to gene list", metavar="character")
+              help="Path to gene list: only required if you want to isolate specific genes. 
+              Text file format", metavar="character")
   ); 
 
 opt_parser = OptionParser(option_list=option_list);
@@ -465,9 +466,10 @@ for (df_final in dataframes){
   
   # Get significant outliers
   # If p_value_corrected is greater than FDR cutoff, insert yes (significant outlier)
+  fdr <- opt$sig_cutoff
   df_fraction_outlier$sig_outlier_q <- NA
-  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value <= 0.01] <- "yes"
-  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value > 0.01] <- "no"
+  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value <= fdr] <- "yes"
+  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value > fdr] <- "no"
   
   # If fraction group 1 mean is greater than group 2 fraction mean, insert yes (significant outlier)
   df_fraction_outlier$sig_outlier_mean[(df_fraction_outlier$group1_fraction_mean) > (df_fraction_outlier$group2_fraction_mean)] <- "yes"
