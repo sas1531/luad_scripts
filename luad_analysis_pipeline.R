@@ -26,7 +26,7 @@ option_list = list(
   make_option(c("-o", "--out"), type="character", default="out", 
               help="output file name for all outlier outputs, do not include file extension", 
               metavar="character"),
-  make_option(c("--sig_cutoff"), type="integer", default="out", 
+  make_option(c("--sig_cutoff"), type="character", default='0.05', 
               help="false discovery rate cutoff as decimal (ex. 0.05)", 
               metavar="character"),
   make_option(c("--aes"), type="character", default="#B2182B", 
@@ -604,9 +604,10 @@ for (df_final in dataframes){
   
   # Get significant outliers
   # If p_value_corrected is greater than FDR cutoff, insert yes (significant outlier)
+  fdr <- opt$sig_cutoff
   df_fraction_outlier$sig_outlier_q <- NA
-  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value <= 0.01] <- "yes"
-  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value > 0.01] <- "no"
+  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value <= fdr] <- "yes"
+  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value > fdr] <- "no"
   
   # If fraction group 1 mean is greater than group 2 fraction mean, insert yes (significant outlier)
   df_fraction_outlier$sig_outlier_mean[(df_fraction_outlier$group1_fraction_mean) > (df_fraction_outlier$group2_fraction_mean)] <- "yes"
