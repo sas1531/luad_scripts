@@ -1,0 +1,1179 @@
+---
+title: "drug_analysis.Rmd"
+author: "Shaleigh Smith"
+date: "4/16/2019"
+output: html_document
+---
+
+
+
+---
+
+Druggability Analysis
+
+---
+
+
+---
+
+```{r}
+
+library(tidyverse)
+library(dplyr)
+library(rDGIdb)
+library(plyr)
+library(data.table)
+library(ComplexHeatmap)
+library(circlize)
+library(RColorBrewer)
+library(harrypotter)
+
+```
+
+
+---
+
+```{r}
+
+# Check data source versions
+resourceVersions()
+
+```
+
+
+---
+
+```{r}
+
+##### 1 Group All Upregulated (no fitler) for Phosphoproteome #####
+
+# Read in all phosphoproteome significant outliers 
+# join all by gene name
+# leave significance 
+# make this into a heatmap
+
+egfr_1 <- read.table("./comparison_results_1_group_fdr_0.01/up_1/luad2_phos_EGFR_up_1__0____sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_1$GeneSymbol <- as.character(egfr_1$GeneSymbol)
+colnames(egfr_1)[2] <- "egfr_1"
+
+gender_female <- read.table("./comparison_results_1_group_fdr_0.01/up_1/luad2_phos_Gender_up_female__male____sig_outliers.txt", header = TRUE, sep = "\t")
+gender_female$GeneSymbol <- as.character(gender_female$GeneSymbol)
+colnames(gender_female)[2] <- "gender_female"
+
+kras_1 <- read.table("./comparison_results_1_group_fdr_0.01/up_1/luad2_phos_KRAS_up_1__0____sig_outliers.txt", header = TRUE, sep = "\t")
+kras_1$GeneSymbol <- as.character(kras_1$GeneSymbol)
+colnames(kras_1)[2] <- "kras_1"
+
+region_asian <- read.table("./comparison_results_1_group_fdr_0.01/up_1/luad2_phos_Region_up_asian__western____sig_outliers.txt", header = TRUE, sep = "\t")
+region_asian$GeneSymbol <- as.character(region_asian$GeneSymbol)
+colnames(region_asian)[2] <- "region_asian"
+
+smoking_current <- read.table("./comparison_results_1_group_fdr_0.01/up_1/luad2_phos_Smoking_History_up_current_smoker__lifelong_non-smoker____sig_outliers.txt", header = TRUE, sep = "\t")
+smoking_current$GeneSymbol <- as.character(smoking_current$GeneSymbol)
+colnames(smoking_current)[2] <- "smoking_current"
+
+smoking_smoker <- read.table("./comparison_results_1_group_fdr_0.01/up_1/luad2_phos_Smoking_up_smoker__non-smoker____sig_outliers.txt", header = TRUE, sep = "\t")
+smoking_smoker$GeneSymbol <- as.character(smoking_smoker$GeneSymbol)
+colnames(smoking_smoker)[2] <- "smoking_smoker"
+
+tp53_1 <- read.table("./comparison_results_1_group_fdr_0.01/up_1/luad2_phos_TP53_up_1__0____sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_1$GeneSymbol <- as.character(tp53_1$GeneSymbol)
+colnames(tp53_1)[2] <- "tp53_1"
+
+###
+
+phos_1 <- full_join(egfr_1, gender_female, by = "GeneSymbol")
+phos_1 <- full_join(phos_1, kras_1, by = "GeneSymbol")
+phos_1 <- full_join(phos_1, region_asian, by = "GeneSymbol")
+phos_1 <- full_join(phos_1, smoking_current, by = "GeneSymbol")
+phos_1 <- full_join(phos_1, smoking_smoker, by = "GeneSymbol")
+phos_1 <- full_join(phos_1, tp53_1, by = "GeneSymbol")
+
+phos_1[is.na(phos_1)] <- 0
+
+
+###
+phos_1_gene <- phos_1[,-1]
+rownames(phos_1_gene) <- phos_1[,1]
+cohorts <- colnames(phos_1_gene)
+phos_1_annotation <- HeatmapAnnotation(df = as.data.frame(cohorts),
+                                       col = list(cohorts = c(egfr_1 = "dodgerblue4", 
+                                                           gender_female = "dodgerblue1",
+                                                           kras_1 =  "mediumorchid4", 
+                                                           region_asian = "mediumorchid1",
+                                                           smoking_current =  "olivedrab4", 
+                                                           smoking_smoker = "olivedrab3",
+                                                           tp53_1 = "darkorange2")))
+
+phos_heat_1 <- Heatmap(phos_1_gene,
+                         top_annotation = phos_1_annotation,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 0),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(3, "in"),
+                                                     title = NULL),
+                         col = colorRamp2(c(0,1.0e-50, 0.0001, 0.01), 
+                                          c("gray85", "red3", "orangered2", "oldlace")),
+                         row_title = "Q Value",
+                         row_title_gp = gpar(fontsize = 10))
+  
+phos_h1 <- draw(phos_heat_1, heatmap_legend_side = "left")
+
+
+```
+
+
+```{r}
+
+##### 1 Group All Upregulated filered for druggable genes for Phosphoproteome #####
+
+# Read in all phosphoproteome significant outliers 
+# join all by gene name
+# leave significance 
+# make this into a heatmap
+
+egfr_1 <- read.table("./comparison_results_1_group_fdr_0.01/up_druggable_1/luad2_phos_druggable_EGFR_up_1__0____sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_1$GeneSymbol <- as.character(egfr_1$GeneSymbol)
+colnames(egfr_1)[2] <- "egfr_1"
+
+gender_female <- read.table("./comparison_results_1_group_fdr_0.01/up_druggable_1/luad2_phos_druggable_Gender_up_female__male____sig_outliers.txt", header = TRUE, sep = "\t")
+gender_female$GeneSymbol <- as.character(gender_female$GeneSymbol)
+colnames(gender_female)[2] <- "gender_female"
+
+kras_1 <- read.table("./comparison_results_1_group_fdr_0.01/up_druggable_1/luad2_phos_druggable_KRAS_up_1__0____sig_outliers.txt", header = TRUE, sep = "\t")
+kras_1$GeneSymbol <- as.character(kras_1$GeneSymbol)
+colnames(kras_1)[2] <- "kras_1"
+
+region_asian <- read.table("./comparison_results_1_group_fdr_0.01/up_druggable_1/luad2_phos_druggable_Region_up_asian__western____sig_outliers.txt", header = TRUE, sep = "\t")
+region_asian$GeneSymbol <- as.character(region_asian$GeneSymbol)
+colnames(region_asian)[2] <- "region_asian"
+
+smoking_current <- read.table("./comparison_results_1_group_fdr_0.01/up_druggable_1/luad2_phos_druggable_Smoking_History_up_current_smoker__lifelong_non-smoker____sig_outliers.txt", header = TRUE, sep = "\t")
+smoking_current$GeneSymbol <- as.character(smoking_current$GeneSymbol)
+colnames(smoking_current)[2] <- "smoking_current"
+
+smoking_smoker <- read.table("./comparison_results_1_group_fdr_0.01/up_druggable_1/luad2_phos_druggable_Smoking_up_smoker__non-smoker____sig_outliers.txt", header = TRUE, sep = "\t")
+smoking_smoker$GeneSymbol <- as.character(smoking_smoker$GeneSymbol)
+colnames(smoking_smoker)[2] <- "smoking_smoker"
+
+
+tp53_1 <- read.table("./comparison_results_1_group_fdr_0.01/up_druggable_1/luad2_phos_druggable_TP53_up_1__0____sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_1$GeneSymbol <- as.character(tp53_1$GeneSymbol)
+colnames(tp53_1)[2] <- "tp53_1"
+
+###
+
+phos_1a <- full_join(egfr_1, gender_female, by = "GeneSymbol")
+phos_1a <- full_join(phos_1a, kras_1, by = "GeneSymbol")
+phos_1a <- full_join(phos_1a, region_asian, by = "GeneSymbol")
+phos_1a <- full_join(phos_1a, smoking_current, by = "GeneSymbol")
+phos_1a <- full_join(phos_1a, smoking_smoker, by = "GeneSymbol")
+phos_1a <- full_join(phos_1a, tp53_1, by = "GeneSymbol")
+
+phos_1a[is.na(phos_1a)] <- 0
+
+phos_1a
+
+###
+phos_1a_gene <- phos_1a[,-1]
+rownames(phos_1a_gene) <- phos_1a[,1]
+cohorts_1a <- colnames(phos_1a_gene)
+phos_1a_annotation <- HeatmapAnnotation(df = as.data.frame(cohorts_1a),
+                                       col = list(cohorts_1a = c(egfr_1 = "dodgerblue4", 
+                                                           gender_female = "dodgerblue1",
+                                                           kras_1 =  "mediumorchid4", 
+                                                           region_asian = "mediumorchid1",
+                                                           smoking_current =  "olivedrab4",
+                                                           smoking_smoker = "olivedrab3",
+                                                           tp53_1 = "darkorange2")))
+
+phos_heat_1a <- Heatmap(phos_1a_gene,
+                         top_annotation = phos_1a_annotation,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 5),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(3, "in"),
+                                                     title = NULL),
+                         col = colorRamp2(c(0, 1.0e-50, 0.0001, 0.01), 
+                                          c("gray85", "red3", "orangered2", "oldlace")),
+                         row_title = "Q Value",
+                         row_title_gp = gpar(fontsize = 10))
+  
+phos_h1a <- draw(phos_heat_1a, heatmap_legend_side = "left")
+
+```
+
+
+
+
+------
+
+```{r}
+
+##### 2 Group All Upregulated (no filter) for Phosphoproteome #####
+
+# Read in all phosphoproteome significant outliers 
+# join all by gene name
+# leave significance 
+# make this into a heatmap
+
+egfr_female <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Gender_EGFR_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_female$GeneSymbol <- as.character(egfr_female$GeneSymbol)
+colnames(egfr_female)[2] <- "egfr_female"
+
+egfr_male <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Gender_EGFR_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_male$GeneSymbol <- as.character(egfr_male$GeneSymbol)
+colnames(egfr_male)[2] <- "egfr_male"
+
+kras_female <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Gender_KRAS_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_female$GeneSymbol <- as.character(kras_female$GeneSymbol)
+colnames(kras_female)[2] <- "kras_female"
+
+kras_male <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Gender_KRAS_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_male$GeneSymbol <- as.character(kras_male$GeneSymbol)
+colnames(kras_male)[2] <- "kras_male"
+
+tp53_female <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Gender_TP53_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_female$GeneSymbol <- as.character(tp53_female$GeneSymbol)
+colnames(tp53_female)[2] <- "tp53_female"
+
+tp53_male <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Gender_TP53_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_male$GeneSymbol <- as.character(tp53_male$GeneSymbol)
+colnames(tp53_male)[2] <- "tp53_male"
+
+egfr_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Region_EGFR_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_asian$GeneSymbol <- as.character(egfr_asian$GeneSymbol)
+colnames(egfr_asian)[2] <- "egfr_asian"
+
+egfr_western <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Region_EGFR_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_western$GeneSymbol <- as.character(egfr_western$GeneSymbol)
+colnames(egfr_western)[2] <- "egfr_western"
+
+gender_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Region_Gender_up_asian_female_asian_male___sig_outliers.txt", header = TRUE, sep = "\t")
+gender_asian$GeneSymbol <- as.character(gender_asian$GeneSymbol)
+colnames(gender_asian)[2] <- "gender_asian"
+
+region_female <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Region_Gender_up_asian_female_western_female___sig_outliers.txt", header = TRUE, sep = "\t")
+region_female$GeneSymbol <- as.character(region_female$GeneSymbol)
+colnames(region_female)[2] <- "region_female"
+
+region_male <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Region_Gender_up_asian_male_western_male___sig_outliers.txt", header = TRUE, sep = "\t")
+region_male$GeneSymbol <- as.character(region_male$GeneSymbol)
+colnames(region_male)[2] <- "region_male"
+
+gender_western <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Region_Gender_up_western_female_western_male___sig_outliers.txt", header = TRUE, sep = "\t")
+gender_western$GeneSymbol <- as.character(gender_western$GeneSymbol)
+colnames(gender_western)[2] <- "gender_western"
+
+kras_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Region_KRAS_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_asian$GeneSymbol <- as.character(kras_asian$GeneSymbol)
+colnames(kras_asian)[2] <- "kras_asian"
+
+kras_western <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Region_KRAS_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_western$GeneSymbol <- as.character(kras_western$GeneSymbol)
+colnames(kras_western)[2] <- "kras_western"
+
+tp53_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Region_TP53_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_asian$GeneSymbol <- as.character(tp53_asian$GeneSymbol)
+colnames(tp53_asian)[2] <- "tp53_asian"
+
+tp53_western <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Region_TP53_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_western$GeneSymbol <- as.character(tp53_western$GeneSymbol)
+colnames(tp53_western)[2] <- "tp53_western"
+
+smoker_female <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Smoking_Gender_up_smoker_female_non-smoker_female___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_female$GeneSymbol <- as.character(smoker_female$GeneSymbol)
+colnames(smoker_female)[2] <- "smoker_female"
+
+smoker_male <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Smoking_Gender_up_smoker_male_non-smoker_male___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_male$GeneSymbol <- as.character(smoker_male$GeneSymbol)
+colnames(smoker_male)[2] <- "smoker_male"
+
+smoker_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Smoking_Region_up_smoker_asian_non-smoker_asian___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_asian$GeneSymbol <- as.character(smoker_asian$GeneSymbol)
+colnames(smoker_asian)[2] <- "smoker_asian"
+
+smoker_western <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Smoking_Region_up_smoker_western_non-smoker_western___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_western$GeneSymbol <- as.character(smoker_western$GeneSymbol)
+colnames(smoker_western)[2] <- "smoker_western"
+
+smoker_egfr <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Smoking_EGFR_up_smoker_1_non-smoker_1___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_egfr$GeneSymbol <- as.character(smoker_egfr$GeneSymbol)
+colnames(smoker_egfr)[2] <- "smoker_egfr"
+
+smoker_kras <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Smoking_KRAS_up_smoker_1_non-smoker_1___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_kras$GeneSymbol <- as.character(smoker_kras$GeneSymbol)
+colnames(smoker_kras)[2] <- "smoker_kras"
+
+smoker_tp53 <- read.table("./comparison_results_2_group_fdr_0.01/up_2/luad2_phos_Smoking_TP53_up_smoker_1_non-smoker_1___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_tp53$GeneSymbol <- as.character(smoker_tp53$GeneSymbol)
+colnames(smoker_tp53)[2] <- "smoker_tp53"
+
+###
+
+phos_2 <- full_join(egfr_female, egfr_male, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, egfr_asian, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, egfr_western, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, kras_female, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, kras_male, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, kras_asian, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, kras_western, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, tp53_female, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, tp53_male, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, tp53_asian, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, tp53_western, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, region_female, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, region_male, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, gender_asian, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, gender_western, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, smoker_female, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, smoker_male, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, smoker_asian, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, smoker_western, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, smoker_egfr, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, smoker_kras, by = "GeneSymbol")
+phos_2 <- full_join(phos_2, smoker_tp53, by = "GeneSymbol")
+
+phos_2[is.na(phos_2)] <- 0
+
+###
+
+phos_2_gene <- phos_2[,-1]
+rownames(phos_2_gene) <- phos_2[,1]
+cohorts_all <- colnames(phos_2_gene)
+phos_2_annotation <- HeatmapAnnotation(df = as.data.frame(cohorts_all),
+                                       col = list(cohorts_all = c(egfr_female = "dodgerblue4",
+                                                              egfr_male = "dodgerblue1",
+                                                              egfr_asian = "deepskyblue4",
+                                                              egfr_western = "deepskyblue2",
+                                                              kras_female = "mediumorchid4",
+                                                              kras_male = "mediumorchid1",
+                                                              kras_asian = "mediumpurple4",
+                                                              kras_western = "mediumpurple1",
+                                                              tp53_female = "olivedrab4",
+                                                              tp53_male = "olivedrab3",
+                                                              tp53_asian = "darkgreen",
+                                                              tp53_western = "springgreen4",
+                                                              region_female = "darkorange3",
+                                                              region_male = "darkorange",
+                                                              gender_asian = "darkgoldenrod3",
+                                                              gender_western = "darkgoldenrod1",
+                                                              smoker_female = "lightsteelblue4",
+                                                              smoker_male = "lightsteelblue1",
+                                                              smoker_asian = "mistyrose4",
+                                                              smoker_western = "mistyrose2",
+                                                              smoker_egfr = "aquamarine4",
+                                                              smoker_kras = "aquamarine3",
+                                                              smoker_tp53 = "aquamarine1")))
+
+phos_heat_2 <- Heatmap(phos_2_gene,
+                         top_annotation = phos_2_annotation,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 0),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(3, "in"),
+                                                     title = NULL),
+                         col = colorRamp2(c(0, 1.0e-50, 0.0001, 0.01), 
+                                          c("gray85", "red3", "orangered2", "oldlace")),
+                         row_title = "Q Value",
+                         row_title_gp = gpar(fontsize = 10))
+  
+phos_h2 <- draw(phos_heat_2, heatmap_legend_side = "left")
+
+```
+
+
+
+```{r}
+
+##### 2 Group All Upregulated filered for druggable genes for Phosphoproteome #####
+
+# Read in all phosphoproteome significant outliers 
+# join all by gene name
+# leave significance 
+# make this into a heatmap
+
+egfr_female <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Gender_EGFR_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_female$GeneSymbol <- as.character(egfr_female$GeneSymbol)
+colnames(egfr_female)[2] <- "egfr_female"
+
+egfr_male <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Gender_EGFR_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_male$GeneSymbol <- as.character(egfr_male$GeneSymbol)
+colnames(egfr_male)[2] <- "egfr_male"
+
+kras_female <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Gender_KRAS_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_female$GeneSymbol <- as.character(kras_female$GeneSymbol)
+colnames(kras_female)[2] <- "kras_female"
+
+kras_male <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Gender_KRAS_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_male$GeneSymbol <- as.character(kras_male$GeneSymbol)
+colnames(kras_male)[2] <- "kras_male"
+
+tp53_female <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Gender_TP53_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_female$GeneSymbol <- as.character(tp53_female$GeneSymbol)
+colnames(tp53_female)[2] <- "tp53_female"
+
+tp53_male <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Gender_TP53_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_male$GeneSymbol <- as.character(tp53_male$GeneSymbol)
+colnames(tp53_male)[2] <- "tp53_male"
+
+egfr_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Region_EGFR_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_asian$GeneSymbol <- as.character(egfr_asian$GeneSymbol)
+colnames(egfr_asian)[2] <- "egfr_asian"
+
+egfr_western <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Region_EGFR_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_western$GeneSymbol <- as.character(egfr_western$GeneSymbol)
+colnames(egfr_western)[2] <- "egfr_western"
+
+gender_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Region_Gender_up_asian_female_asian_male___sig_outliers.txt", header = TRUE, sep = "\t")
+gender_asian$GeneSymbol <- as.character(gender_asian$GeneSymbol)
+colnames(gender_asian)[2] <- "gender_asian"
+
+region_female <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Region_Gender_up_asian_female_western_female___sig_outliers.txt", header = TRUE, sep = "\t")
+region_female$GeneSymbol <- as.character(region_female$GeneSymbol)
+colnames(region_female)[2] <- "region_female"
+
+region_male <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Region_Gender_up_asian_male_western_male___sig_outliers.txt", header = TRUE, sep = "\t")
+region_male$GeneSymbol <- as.character(region_male$GeneSymbol)
+colnames(region_male)[2] <- "region_male"
+
+gender_western <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Region_Gender_up_western_female_western_male___sig_outliers.txt", header = TRUE, sep = "\t")
+gender_western$GeneSymbol <- as.character(gender_western$GeneSymbol)
+colnames(gender_western)[2] <- "gender_western"
+
+kras_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Region_KRAS_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_asian$GeneSymbol <- as.character(kras_asian$GeneSymbol)
+colnames(kras_asian)[2] <- "kras_asian"
+
+kras_western <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Region_KRAS_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_western$GeneSymbol <- as.character(kras_western$GeneSymbol)
+colnames(kras_western)[2] <- "kras_western"
+
+tp53_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Region_TP53_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_asian$GeneSymbol <- as.character(tp53_asian$GeneSymbol)
+colnames(tp53_asian)[2] <- "tp53_asian"
+
+tp53_western <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Region_TP53_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_western$GeneSymbol <- as.character(tp53_western$GeneSymbol)
+colnames(tp53_western)[2] <- "tp53_western"
+
+smoker_female <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Smoking_Gender_up_smoker_female_non-smoker_female___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_female$GeneSymbol <- as.character(smoker_female$GeneSymbol)
+colnames(smoker_female)[2] <- "smoker_female"
+
+smoker_male <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Smoking_Gender_up_smoker_male_non-smoker_male___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_male$GeneSymbol <- as.character(smoker_male$GeneSymbol)
+colnames(smoker_male)[2] <- "smoker_male"
+
+smoker_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Smoking_Region_up_smoker_asian_non-smoker_asian___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_asian$GeneSymbol <- as.character(smoker_asian$GeneSymbol)
+colnames(smoker_asian)[2] <- "smoker_asian"
+
+smoker_western <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Smoking_Region_up_smoker_western_non-smoker_western___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_western$GeneSymbol <- as.character(smoker_western$GeneSymbol)
+colnames(smoker_western)[2] <- "smoker_western"
+
+smoker_tp53 <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_2/luad2_phos_druggable_Smoking_TP53_up_smoker_1_non-smoker_1___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_tp53$GeneSymbol <- as.character(smoker_tp53$GeneSymbol)
+colnames(smoker_tp53)[2] <- "smoker_tp53"
+
+###
+
+phos_2a <- full_join(egfr_female, egfr_male, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, egfr_asian, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, egfr_western, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, kras_female, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, kras_male, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, kras_asian, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, kras_western, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, tp53_female, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, tp53_male, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, tp53_asian, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, tp53_western, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, region_female, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, region_male, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, gender_asian, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, gender_western, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, smoker_female, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, smoker_male, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, smoker_asian, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, smoker_western, by = "GeneSymbol")
+phos_2a <- full_join(phos_2a, smoker_tp53, by = "GeneSymbol")
+
+phos_2a[is.na(phos_2a)] <- 0
+
+###
+
+phos_2a_gene <- phos_2a[,-1]
+rownames(phos_2a_gene) <- phos_2a[,1]
+cohorts_druggable <- colnames(phos_2a_gene)
+phos_2a_annotation <- HeatmapAnnotation(df = as.data.frame(cohorts_druggable),
+                                       col = list(cohorts_druggable = c(egfr_female = "dodgerblue4",
+                                                              egfr_male = "dodgerblue1",
+                                                              egfr_asian = "deepskyblue4",
+                                                              egfr_western = "deepskyblue2",
+                                                              kras_female = "mediumorchid4",
+                                                              kras_male = "mediumorchid1",
+                                                              kras_asian = "mediumpurple4",
+                                                              kras_western = "mediumpurple1",
+                                                              tp53_female = "olivedrab4",
+                                                              tp53_male = "olivedrab3",
+                                                              tp53_asian = "darkgreen",
+                                                              tp53_western = "springgreen4",
+                                                              region_female = "darkorange3",
+                                                              region_male = "darkorange",
+                                                              gender_asian = "darkgoldenrod3",
+                                                              gender_western = "darkgoldenrod1",
+                                                              smoker_female = "lightsteelblue4",
+                                                              smoker_male = "lightsteelblue1",
+                                                              smoker_asian = "mistyrose4",
+                                                              smoker_western = "mistyrose2",
+                                                              smoker_tp53 = "aquamarine4")))
+
+phos_heat_2a <- Heatmap(phos_2a_gene,
+                         top_annotation = phos_2a_annotation,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 4.5),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(3, "in"),
+                                                     title = NULL),
+                         col = colorRamp2(c(0,1.0e-50, 0.0001, 0.01), 
+                                          c("gray85", "red3", "orangered2", "oldlace")),
+                         row_title = "Q Value",
+                         row_title_gp = gpar(fontsize = 10))
+  
+phos_h2a <- draw(phos_heat_2a, heatmap_legend_side = "left")
+
+
+```
+
+
+```{r}
+
+##### 2 Group All Upregulated filtered for kinases for Phosphoproteome #####
+
+# Read in all phosphoproteome significant outliers 
+# join all by gene name
+# leave significance 
+# make this into a heatmap
+
+egfr_female <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Gender_EGFR_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_female$GeneSymbol <- as.character(egfr_female$GeneSymbol)
+colnames(egfr_female)[2] <- "egfr_female"
+
+egfr_male <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Gender_EGFR_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_male$GeneSymbol <- as.character(egfr_male$GeneSymbol)
+colnames(egfr_male)[2] <- "egfr_male"
+
+kras_female <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Gender_KRAS_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_female$GeneSymbol <- as.character(kras_female$GeneSymbol)
+colnames(kras_female)[2] <- "kras_female"
+
+kras_male <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Gender_KRAS_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_male$GeneSymbol <- as.character(kras_male$GeneSymbol)
+colnames(kras_male)[2] <- "kras_male"
+
+tp53_female <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Gender_TP53_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_female$GeneSymbol <- as.character(tp53_female$GeneSymbol)
+colnames(tp53_female)[2] <- "tp53_female"
+
+tp53_male <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Gender_TP53_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_male$GeneSymbol <- as.character(tp53_male$GeneSymbol)
+colnames(tp53_male)[2] <- "tp53_male"
+
+egfr_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Region_EGFR_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_asian$GeneSymbol <- as.character(egfr_asian$GeneSymbol)
+colnames(egfr_asian)[2] <- "egfr_asian"
+
+egfr_western <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Region_EGFR_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_western$GeneSymbol <- as.character(egfr_western$GeneSymbol)
+colnames(egfr_western)[2] <- "egfr_western"
+
+gender_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Region_Gender_up_asian_female_asian_male___sig_outliers.txt", header = TRUE, sep = "\t")
+gender_asian$GeneSymbol <- as.character(gender_asian$GeneSymbol)
+colnames(gender_asian)[2] <- "gender_asian"
+
+region_female <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Region_Gender_up_asian_female_western_female___sig_outliers.txt", header = TRUE, sep = "\t")
+region_female$GeneSymbol <- as.character(region_female$GeneSymbol)
+colnames(region_female)[2] <- "region_female"
+
+region_male <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Region_Gender_up_asian_male_western_male___sig_outliers.txt", header = TRUE, sep = "\t")
+region_male$GeneSymbol <- as.character(region_male$GeneSymbol)
+colnames(region_male)[2] <- "region_male"
+
+gender_western <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Region_Gender_up_western_female_western_male___sig_outliers.txt", header = TRUE, sep = "\t")
+gender_western$GeneSymbol <- as.character(gender_western$GeneSymbol)
+colnames(gender_western)[2] <- "gender_western"
+
+kras_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Region_KRAS_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_asian$GeneSymbol <- as.character(kras_asian$GeneSymbol)
+colnames(kras_asian)[2] <- "kras_asian"
+
+kras_western <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Region_KRAS_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_western$GeneSymbol <- as.character(kras_western$GeneSymbol)
+colnames(kras_western)[2] <- "kras_western"
+
+tp53_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Region_TP53_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_asian$GeneSymbol <- as.character(tp53_asian$GeneSymbol)
+colnames(tp53_asian)[2] <- "tp53_asian"
+
+tp53_western <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Region_TP53_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_western$GeneSymbol <- as.character(tp53_western$GeneSymbol)
+colnames(tp53_western)[2] <- "tp53_western"
+
+smoker_female <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Smoking_Gender_up_smoker_female_non-smoker_female___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_female$GeneSymbol <- as.character(smoker_female$GeneSymbol)
+colnames(smoker_female)[2] <- "smoker_female"
+
+smoker_egfr <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Smoking_EGFR_up_smoker_1_non-smoker_1___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_egfr$GeneSymbol <- as.character(smoker_egfr$GeneSymbol)
+colnames(smoker_egfr)[2] <- "smoker_egfr"
+
+smoker_tp53 <- read.table("./comparison_results_2_group_fdr_0.01/up_kinase_2/luad2_phos_kinase_Smoking_TP53_up_smoker_1_non-smoker_1___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_tp53$GeneSymbol <- as.character(smoker_tp53$GeneSymbol)
+colnames(smoker_tp53)[2] <- "smoker_tp53"
+
+###
+
+phos_2c <- full_join(egfr_female, egfr_male, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, egfr_asian, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, egfr_western, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, kras_female, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, kras_male, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, kras_asian, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, kras_western, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, tp53_female, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, tp53_male, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, tp53_asian, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, tp53_western, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, region_female, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, region_male, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, gender_asian, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, gender_western, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, smoker_female, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, smoker_egfr, by = "GeneSymbol")
+phos_2c <- full_join(phos_2c, smoker_tp53, by = "GeneSymbol")
+
+phos_2c[is.na(phos_2c)] <- 0
+
+###
+
+phos_2c_gene <- phos_2c[,-1]
+rownames(phos_2c_gene) <- phos_2c[,1]
+cohorts_kinase <- colnames(phos_2c_gene)
+phos_2c_annotation <- HeatmapAnnotation(df = as.data.frame(cohorts_kinase),
+                                       col = list(cohorts_kinase = c(egfr_female = "dodgerblue4",
+                                                              egfr_male = "dodgerblue1",
+                                                              egfr_asian = "deepskyblue4",
+                                                              egfr_western = "deepskyblue2",
+                                                              kras_female = "mediumorchid4",
+                                                              kras_male = "mediumorchid1",
+                                                              kras_asian = "mediumpurple4",
+                                                              kras_western = "mediumpurple1",
+                                                              tp53_female = "olivedrab4",
+                                                              tp53_male = "olivedrab3",
+                                                              tp53_asian = "darkgreen",
+                                                              tp53_western = "springgreen4",
+                                                              region_female = "darkorange3",
+                                                              region_male = "darkorange",
+                                                              gender_asian = "darkgoldenrod3",
+                                                              gender_western = "darkgoldenrod1",
+                                                              smoker_female = "lightsteelblue4",
+                                                              smoker_male = "lightsteelblue1",
+                                                              smoker_asian = "mistyrose4",
+                                                              smoker_western = "mistyrose2",
+                                                              smoker_egfr = "aquamarine4",
+                                                              smoker_kras = "aquamarine3",
+                                                              smoker_tp53 = "aquamarine1")))
+
+phos_heat_2c <- Heatmap(phos_2c_gene,
+                         top_annotation = phos_2c_annotation,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 4.5),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(3, "in"),
+                                                     title = NULL),
+                         col = colorRamp2(c(0, 1.0e-50, 0.0001, 0.01), 
+                                          c("gray85", "red3", "orangered2", "oldlace")),
+                         row_title = "Q Value",
+                         row_title_gp = gpar(fontsize = 10))
+  
+phos_h2c <- draw(phos_heat_2c, heatmap_legend_side = "left")
+
+```
+
+
+```{r}
+
+##### 2 Group All Upregulated filered for druggable kinases for Phosphoproteome #####
+
+# Read in all phosphoproteome significant outliers 
+# join all by gene name
+# leave significance 
+# make this into a heatmap
+
+egfr_male <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_kinase_2/luad2_phos_druggable_kinase_Gender_EGFR_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_male$GeneSymbol <- as.character(egfr_male$GeneSymbol)
+colnames(egfr_male)[2] <- "egfr_male"
+
+kras_male <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_kinase_2/luad2_phos_druggable_kinase_Gender_KRAS_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_male$GeneSymbol <- as.character(kras_male$GeneSymbol)
+colnames(kras_male)[2] <- "kras_male"
+
+tp53_female <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_kinase_2/luad2_phos_druggable_kinase_Gender_TP53_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_female$GeneSymbol <- as.character(tp53_female$GeneSymbol)
+colnames(tp53_female)[2] <- "tp53_female"
+
+egfr_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_kinase_2/luad2_phos_druggable_kinase_Region_EGFR_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_asian$GeneSymbol <- as.character(egfr_asian$GeneSymbol)
+colnames(egfr_asian)[2] <- "egfr_asian"
+
+gender_asian <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_kinase_2/luad2_phos_druggable_kinase_Region_Gender_up_asian_female_asian_male___sig_outliers.txt", header = TRUE, sep = "\t")
+gender_asian$GeneSymbol <- as.character(gender_asian$GeneSymbol)
+colnames(gender_asian)[2] <- "gender_asian"
+
+region_female <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_kinase_2/luad2_phos_druggable_kinase_Region_Gender_up_asian_female_western_female___sig_outliers.txt", header = TRUE, sep = "\t")
+region_female$GeneSymbol <- as.character(region_female$GeneSymbol)
+colnames(region_female)[2] <- "region_female"
+
+region_male <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_kinase_2/luad2_phos_druggable_kinase_Region_Gender_up_asian_male_western_male___sig_outliers.txt", header = TRUE, sep = "\t")
+region_male$GeneSymbol <- as.character(region_male$GeneSymbol)
+colnames(region_male)[2] <- "region_male"
+
+gender_western <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_kinase_2/luad2_phos_druggable_kinase_Region_Gender_up_western_female_western_male___sig_outliers.txt", header = TRUE, sep = "\t")
+gender_western$GeneSymbol <- as.character(gender_western$GeneSymbol)
+colnames(gender_western)[2] <- "gender_western"
+
+kras_western <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_kinase_2/luad2_phos_druggable_kinase_Region_KRAS_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_western$GeneSymbol <- as.character(kras_western$GeneSymbol)
+colnames(kras_western)[2] <- "kras_western"
+
+tp53_western <- read.table("./comparison_results_2_group_fdr_0.01/up_druggable_kinase_2/luad2_phos_druggable_kinase_Region_TP53_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_western$GeneSymbol <- as.character(tp53_western$GeneSymbol)
+colnames(tp53_western)[2] <- "tp53_western"
+
+###
+
+phos_2b <- full_join(egfr_female, egfr_male, by = "GeneSymbol")
+phos_2b <- full_join(phos_2b, egfr_asian, by = "GeneSymbol")
+phos_2b <- full_join(phos_2b, kras_male, by = "GeneSymbol")
+phos_2b <- full_join(phos_2b, kras_western, by = "GeneSymbol")
+phos_2b <- full_join(phos_2b, tp53_female, by = "GeneSymbol")
+phos_2b <- full_join(phos_2b, tp53_western, by = "GeneSymbol")
+phos_2b <- full_join(phos_2b, region_female, by = "GeneSymbol")
+phos_2b <- full_join(phos_2b, region_male, by = "GeneSymbol")
+phos_2b <- full_join(phos_2b, gender_asian, by = "GeneSymbol")
+phos_2b <- full_join(phos_2b, gender_western, by = "GeneSymbol")
+
+phos_2b[is.na(phos_2b)] <- 0
+
+###
+
+phos_2b_gene <- phos_2b[,-1]
+rownames(phos_2b_gene) <- phos_2b[,1]
+cohorts_druggable_kinase <- colnames(phos_2b_gene)
+phos_2b_annotation <- HeatmapAnnotation(df = as.data.frame(cohorts_druggable_kinase),
+                                       col = list(cohorts_druggable_kinase = c(egfr_female = "dodgerblue4",
+                                                              egfr_male = "dodgerblue1",
+                                                              egfr_asian = "deepskyblue4",
+                                                              kras_male = "mediumorchid1",
+                                                              kras_western = "mediumpurple1",
+                                                              tp53_female = "olivedrab4",
+                                                              tp53_western = "springgreen4",
+                                                              region_female = "darkorange3",
+                                                              region_male = "darkorange",
+                                                              gender_asian = "darkgoldenrod3",
+                                                              gender_western = "darkgoldenrod1")))
+
+phos_heat_2b <- Heatmap(phos_2b_gene,
+                         top_annotation = phos_2b_annotation,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 4.5),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(3, "in"),
+                                                     title = NULL),
+                         col = colorRamp2(c(0,1.0e-50, 0.0001, 0.01), 
+                                          c("gray85", "red3", "orangered2", "oldlace")),
+                         row_title = "Q Value",
+                         row_title_gp = gpar(fontsize = 10))
+  
+phos_h2b <- draw(phos_heat_2b, heatmap_legend_side = "left")
+
+```
+
+
+---
+
+
+```{r}
+
+# Export phospho heatmaps
+
+png("phos_group1_qvalue_heatmap.png", units="in", width=8, height=5, res=600)
+print(phos_h1)
+dev.off()
+
+png("phos_group1_qvalue_druggable_heatmap.png", units="in", width=8, height=5, res=600)
+print(phos_h1a)
+dev.off()
+
+png("phos_group2_qvalue_heatmap.png", units="in", width=8, height=5, res=600)
+print(phos_h2)
+dev.off()
+
+png("phos_group2_qvalue_druggable_heatmap.png", units="in", width=8, height=5, res=600)
+print(phos_h2a)
+dev.off()
+
+png("phos_group2_qvalue_druggable_kinases_heatmap.png", units="in", width=8, height=5, res=600)
+print(phos_h2b)
+dev.off()
+
+png("phos_group2_qvalue_kinases_heatmap.png", units="in", width=8, height=5, res=600)
+print(phos_h2c)
+dev.off()
+
+```
+
+
+
+---
+
+
+---
+
+
+
+---
+
+Change heatmap annotations
+
+---
+
+
+
+```{r}
+
+## Non-filtered
+phos_2_annotation <- HeatmapAnnotation(Comparison = c(rep('EGFR', 4), rep('KRAS', 4), 
+                                                    rep('TP53', 4), rep('Region', 2), 
+                                                    rep('Gender', 2), rep('Smoker', 7)), 
+                                       Cohort = c("Female", "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "EGFR_Mutation",
+                                                    "KRAS_Mutation", "TP53_Mutation"),
+                                       col = list(Comparison = c(EGFR = "#EF7C12",
+                                                              KRAS = "#FFB90F",
+                                                              TP53 = "#F7E690",
+                                                              Region = "#EFC7E6",
+                                                              Gender = "#CB87B4",
+                                                              Smoker = "#B25D94"),
+                                                  Cohort = c(Female = "#BDDE9B",
+                                                             Male = "#1BB6AF" ,
+                                                              Asian = "#0076C0",
+                                                              Western = "#27408B" ,
+                                                              EGFR_Mutation = "#EDA9AB",
+                                                              KRAS_Mutation = "#F28A8A",
+                                                              TP53_Mutation = "#D9565C" )))
+
+phos_heat_2 <- Heatmap(phos_2_gene,
+                         top_annotation = phos_2_annotation,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 0),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(3, "in"),
+                                                     title = "Q Value"),
+                         col = colorRamp2(c(0, 1.0e-50, 0.0001, 0.01), 
+                                          c("gray85", "red3", "orangered2", "oldlace")),
+                         row_title_gp = gpar(fontsize = 10))
+  
+phos_h2 <- draw(phos_heat_2, heatmap_legend_side = "left")
+
+
+## Druggable filtered
+phos_2a_annotation <- HeatmapAnnotation(Comparison = c(rep('EGFR', 4), rep('KRAS', 4), 
+                                                    rep('TP53', 4), rep('Region', 2), 
+                                                    rep('Gender', 2), rep('Smoker', 5)), 
+                                       Cohort = c("Female", "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "TP53_Mutation"),
+                                       col = list(Comparison = c(EGFR = "#EF7C12",
+                                                              KRAS = "#FFB90F",
+                                                              TP53 = "#F7E690",
+                                                              Region = "#EFC7E6",
+                                                              Gender = "#CB87B4",
+                                                              Smoker = "#B25D94"),
+                                                  Cohort = c(Female = "#BDDE9B",
+                                                             Male = "#1BB6AF" ,
+                                                              Asian = "#0076C0",
+                                                              Western = "#27408B",
+                                                              TP53_Mutation = "#D9565C" )))
+
+phos_heat_2a <- Heatmap(phos_2a_gene,
+                         top_annotation = phos_2a_annotation,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 4.5),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(3, "in"),
+                                                     title = "Q Value"),
+                         col = colorRamp2(c(0, 1.0e-50, 0.0001, 0.01), 
+                                          c("gray85", "red3", "orangered2", "oldlace")),
+                         row_title_gp = gpar(fontsize = 10))
+  
+phos_h2a <- draw(phos_heat_2a, heatmap_legend_side = "left")
+
+## Kinase filtered
+phos_2c_annotation <- HeatmapAnnotation(Comparison = c(rep('EGFR', 4), rep('KRAS', 4), 
+                                                    rep('TP53', 4), rep('Region', 2), 
+                                                    rep('Gender', 2), rep('Smoker', 3)), 
+                                       Cohort = c("Female", "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "Female", 
+                                                    "EGFR_Mutation", "TP53_Mutation"),
+                                       col = list(Comparison = c(EGFR = "#EF7C12",
+                                                              KRAS = "#FFB90F",
+                                                              TP53 = "#F7E690",
+                                                              Region = "#EFC7E6",
+                                                              Gender = "#CB87B4",
+                                                              Smoker = "#B25D94"),
+                                                  Cohort = c(Female = "#BDDE9B",
+                                                             Male = "#1BB6AF" ,
+                                                              Asian = "#0076C0",
+                                                              Western = "#27408B",
+                                                              EGFR_Mutation = "#EDA9AB",
+                                                              TP53_Mutation = "#D9565C" )))
+
+phos_heat_2c <- Heatmap(phos_2c_gene,
+                         top_annotation = phos_2c_annotation,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 5),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(3, "in"),
+                                                     title = "Q Value"),
+                         col = colorRamp2(c(0, 1.0e-50, 0.0001, 0.01), 
+                                          c("gray85", "red3", "orangered2", "oldlace")),
+                         row_title_gp = gpar(fontsize = 10))
+  
+phos_h2c <- draw(phos_heat_2c, heatmap_legend_side = "left")
+
+## Druggable Kinase filtered
+phos_2b_annotation <- HeatmapAnnotation(Comparison = c(rep('EGFR', 3), rep('KRAS', 2), 
+                                                    rep('TP53', 2), rep('Region', 2), 
+                                                    rep('Gender', 2)), 
+                                       Cohort = c("Female", "Male", "Asian", 
+                                                    "Male", "Western", "Female", 
+                                                    "Western", "Female", 
+                                                    "Male", "Asian", "Western"),
+                                       col = list(Comparison = c(EGFR = "#EF7C12",
+                                                              KRAS = "#FFB90F",
+                                                              TP53 = "#F7E690",
+                                                              Region = "#EFC7E6",
+                                                              Gender = "#CB87B4"),
+                                                  Cohort = c(Female = "#BDDE9B",
+                                                             Male = "#1BB6AF" ,
+                                                              Asian = "#0076C0",
+                                                              Western = "#27408B")))
+
+phos_heat_2b <- Heatmap(phos_2b_gene,
+                         top_annotation = phos_2b_annotation,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 7),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(3, "in"),
+                                                     title = "Q Value"),
+                         col = colorRamp2(c(0, 1.0e-50, 0.0001, 0.01), 
+                                          c("gray85", "red3", "orangered2", "oldlace")),
+                         row_title_gp = gpar(fontsize = 10))
+  
+phos_h2b <- draw(phos_heat_2b, heatmap_legend_side = "left")
+
+
+```
+
+```{r}
+
+
+# Export phospho heatmaps (final)
+
+png("phos_group2_qvalue_heatmap.png", units="in", width=8, height=5, res=600)
+print(phos_h2)
+dev.off()
+
+png("phos_group2_qvalue_druggable_heatmap.png", units="in", width=8, height=5, res=600)
+print(phos_h2a)
+dev.off()
+
+png("phos_group2_qvalue_druggable_kinases_heatmap.png", units="in", width=8, height=5, res=600)
+print(phos_h2b)
+dev.off()
+
+png("phos_group2_qvalue_kinases_heatmap.png", units="in", width=8, height=5, res=600)
+print(phos_h2c)
+dev.off()
+
+```
+
+
+---
+
+
+---
+
+
+---
+
+Druggability Database
+
+---
+
+```{r}
+
+#rDGIdb
+
+# all
+all <- rownames(phos_2_gene)
+length(all) #651
+
+# druggable
+druggable <- rownames(phos_2a_gene)
+length(druggable) #63
+
+# kinase
+kinase <- rownames(phos_2c_gene)
+length(kinase) #48
+
+# druggable kinase
+druggable_kinase <- rownames(phos_2b_gene)
+length(druggable_kinase) #10
+
+```
+
+```{r}
+
+# Run query
+result_all <- queryDGIdb(all)
+
+# Results
+result_all
+
+## Result summary
+# Score is the total number of source databases listing the interaction (including PubMed articles)
+summary <- resultSummary(result_all) 
+
+## Detailed results
+detail <- detailedResults(result_all) 
+
+## By gene
+by_gene <- byGene(result_all)
+
+## Search term summary
+search_term <- searchTermSummary(result_all)
+
+## Plot by source
+plotInteractionsBySource(result_all, main = "Number of interactions by source")
+
+
+```
+
+
+```{r}
+
+# Review summary
+summary
+length(unique(summary$Gene)) #127 druggable genes 
+
+# Review detail
+detail
+
+```
+
+```{r}
+
+# Isolate Kinases
+result_all_kinases <- queryDGIdb(all, geneCategories = c("KINASE", "LIPID KINASE",
+                                                         "PHOSPHATIDYLINOSITOL 3 KINASE",
+                                                         "SERINE THREONINE KINASE",
+                                                         "TYROSINE KINASE"))
+
+# View results
+result_all_kinases
+
+# Check numbers
+all_kinase_summary <- resultSummary(result_all_kinases)
+length(unique(all_kinase_summary$Gene)) #47
+
+# Remove rows that aren't in category (empty DruggableGeneCategories column )
+by_gene_all_kinase <- byGene(result_all_kinases)
+by_gene_all_kinase <- filter(by_gene_all_kinase, DruggableGeneCategories != "" )
+by_gene_all_kinase
+
+# Combine with q value for kinases
+phos_2_join <- phos_2
+colnames(phos_2_join)[1] <- "Gene"
+
+by_gene_all_kinase_q_value <- inner_join(by_gene_all_kinase, phos_2_join, by = "Gene")
+by_gene_all_kinase_q_value[by_gene_all_kinase_q_value == 0] <- NA
+
+by_gene_all_kinase_q_value
+
+```
+
+
+
+
+```{r}
+
+## Kinases only (not druggable)
+kinase_only <- queryDGIdb(kinase)
+
+# Check Summary
+kinase_only_summary <- resultSummary(kinase_only)
+length(unique(kinase_only_summary$Gene)) # 30 unique genes (this means 18 are not druggable)
+
+# Check details
+kinase_only_details <- detailedResults(kinase_only)
+length(unique(kinase_only_details$Gene)) # 30 confirmed
+
+kinase_only_details
+kinase_only_summary
+kinase_only
+
+```
+
+
+---
