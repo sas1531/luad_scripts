@@ -27,6 +27,7 @@ library(ComplexHeatmap)
 library(circlize)
 library(RColorBrewer)
 library(harrypotter)
+library(tidyr)
 
 ```
 
@@ -1154,7 +1155,11 @@ by_gene_all_kinase_q_value
 ```
 
 
+```{r}
 
+
+
+```
 
 ```{r}
 
@@ -1177,3 +1182,429 @@ kinase_only
 
 
 ---
+
+```{r}
+
+# Final Figure interaction type 
+detail_fig <- dplyr::select(detail, Gene, InteractionType)
+
+colnames(detail_fig)[1:2] <- c("gene", "interaction")
+
+
+# if interaction includes this exact match, put 1 else put 0 
+#frame$twohouses <- ifelse(frame$data>=2, 2, 1)
+
+detail_fig <- separate(detail_fig, interaction, into=c("int_1", "int_2", "int_3", "int_4"), sep="," )
+detail_fig$int_1[detail_fig$int_1==''] <- NA
+detail_fig$int_1[is.na(detail_fig$int_1) == TRUE] <- 0
+detail_fig$int_2[is.na(detail_fig$int_2) == TRUE] <- 0
+detail_fig$int_3[is.na(detail_fig$int_3) == TRUE] <- 0
+detail_fig$int_4[is.na(detail_fig$int_4) == TRUE] <- 0
+
+detail_fig$inhibitor <-ifelse((detail_fig$int_1 == "inhibitor" |
+                                detail_fig$int_2 == "inhibitor" |
+                                detail_fig$int_3 == "inhibitor" |
+                                detail_fig$int_4 == "inhibitor"), 1, 0)
+
+detail_fig$antagonist <-ifelse((detail_fig$int_1 == "antagonist" |
+                                detail_fig$int_2 == "antagonist" |
+                                detail_fig$int_3 == "antagonist" |
+                                detail_fig$int_4 == "antagonist"), 1, 0)
+
+detail_fig$antibody <-ifelse((detail_fig$int_1 == "antibody" |
+                                detail_fig$int_2 == "antibody" |
+                                detail_fig$int_3 == "antibody" |
+                                detail_fig$int_4 == "antibody"), 1, 0)
+
+detail_fig$suppressor <-ifelse((detail_fig$int_1 == "suppressor" |
+                                detail_fig$int_2 == "suppressor" |
+                                detail_fig$int_3 == "suppressor" |
+                                detail_fig$int_4 == "suppressor"), 1, 0)
+
+detail_fig$cofactor <-ifelse((detail_fig$int_1 == "cofactor" |
+                                detail_fig$int_2 == "cofactor" |
+                                detail_fig$int_3 == "cofactor" |
+                                detail_fig$int_4 == "cofactor"), 1, 0)
+
+detail_fig$binder <-ifelse((detail_fig$int_1 == "binder" |
+                                detail_fig$int_2 == "binder" |
+                                detail_fig$int_3 == "binder" |
+                                detail_fig$int_4 == "binder"), 1, 0)
+
+detail_fig$other <-ifelse((detail_fig$int_1 == "other" |
+                                detail_fig$int_2 == "other" |
+                                detail_fig$int_3 == "other" |
+                                detail_fig$int_4 == "other"), 1, 0)
+
+detail_fig$channel_blocker <-ifelse((detail_fig$int_1 == "channel blocker" |
+                                detail_fig$int_2 == "channel blocker" |
+                                detail_fig$int_3 == "channel blocker" |
+                                detail_fig$int_4 == "channel blocker"), 1, 0)
+
+detail_fig$activator <-ifelse((detail_fig$int_1 == "activator" |
+                                detail_fig$int_2 == "activator" |
+                                detail_fig$int_3 == "activator" |
+                                detail_fig$int_4 == "activator"), 1, 0)
+
+detail_fig$inducer <-ifelse((detail_fig$int_1 == "inducer" |
+                                detail_fig$int_2 == "inducer" |
+                                detail_fig$int_3 == "inducer" |
+                                detail_fig$int_4 == "inducer"), 1, 0)
+
+detail_fig$ligand <-ifelse((detail_fig$int_1 == "ligand" |
+                                detail_fig$int_2 == "ligand" |
+                                detail_fig$int_3 == "ligand" |
+                                detail_fig$int_4 == "ligand"), 1, 0)
+
+detail_fig$blocker <-ifelse((detail_fig$int_1 == "blocker" |
+                                detail_fig$int_2 == "blocker" |
+                                detail_fig$int_3 == "blocker" |
+                                detail_fig$int_4 == "blocker"), 1, 0)
+
+detail_fig$adduct <-ifelse((detail_fig$int_1 == "adduct" |
+                                detail_fig$int_2 == "adduct" |
+                                detail_fig$int_3 == "adduct" |
+                                detail_fig$int_4 == "adduct"), 1, 0)
+
+detail_fig$antisense <-ifelse((detail_fig$int_1 == "antisense" |
+                                detail_fig$int_2 == "antisense" |
+                                detail_fig$int_3 == "antisense" |
+                                detail_fig$int_4 == "antisense"), 1, 0)
+
+detail_fig$agonist <-ifelse((detail_fig$int_1 == "agonist" |
+                                detail_fig$int_2 == "agonist" |
+                                detail_fig$int_3 == "agonist" |
+                                detail_fig$int_4 == "agonist"), 1, 0)
+
+detail_fig
+
+detail_fig_final <- dplyr::select(detail_fig, -int_1, -int_2, -int_3, -int_4)
+detail_fig_final
+
+```
+
+
+
+---
+
+```{r}
+
+# Aggregate and sum by gene name 
+detail_agg <- aggregate(. ~ gene, data = detail_fig_final, sum)
+
+# Order rows to match heatmap
+target <- as.vector(rownames(phos_2_gene))
+detail_agg <- detail_agg[match(target, detail_agg$gene),]
+
+# Label row names for heatmap
+row.names(detail_agg) <- target
+
+# Remove gene column
+detail_agg_fig <- dplyr::select(detail_agg, -gene)
+
+# Create heatmap
+detail_agg_heat <- Heatmap(detail_agg_fig,
+                         show_column_names = T, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 0),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(3, "in"),
+                                                     title = "Q Value"),
+                         col = colorRamp2(c(0, 20), 
+                                          c("red", "blue")),
+                         row_title_gp = gpar(fontsize = 10))
+
+detail_agg_heat
+
+### this won't be very clear, try only druggable next
+
+```
+
+
+---
+
+
+```{r}
+
+## Druggable
+result_drug <- queryDGIdb(druggable)
+
+## Detailed results
+detail_drug_1 <- detailedResults(result_drug) 
+detail_drug_1
+
+# Final Figure interaction type 
+detail_drug <- dplyr::select(detail_drug_1, Gene, InteractionType)
+
+colnames(detail_drug)[1:2] <- c("gene", "interaction")
+
+
+# if interaction includes this exact match, put 1 else put 0 
+
+detail_drug <- separate(detail_drug, interaction, into=c("int_1", "int_2", "int_3", "int_4"), sep="," )
+detail_drug$int_1[detail_drug$int_1==''] <- NA
+detail_drug$int_1[is.na(detail_drug$int_1) == TRUE] <- 0
+detail_drug$int_2[is.na(detail_drug$int_2) == TRUE] <- 0
+detail_drug$int_3[is.na(detail_drug$int_3) == TRUE] <- 0
+detail_drug$int_4[is.na(detail_drug$int_4) == TRUE] <- 0
+
+detail_drug$Inhibitor <-ifelse((detail_drug$int_1 == "inhibitor" |
+                                detail_drug$int_2 == "inhibitor" |
+                                detail_drug$int_3 == "inhibitor" |
+                                detail_drug$int_4 == "inhibitor"), 1, 0)
+
+detail_drug$Antagonist <-ifelse((detail_drug$int_1 == "antagonist" |
+                                detail_drug$int_2 == "antagonist" |
+                                detail_drug$int_3 == "antagonist" |
+                                detail_drug$int_4 == "antagonist"), 1, 0)
+
+detail_drug$Agonist <-ifelse((detail_drug$int_1 == "agonist" |
+                                detail_drug$int_2 == "agonist" |
+                                detail_drug$int_3 == "agonist" |
+                                detail_drug$int_4 == "agonist"), 1, 0)
+
+detail_drug$Antibody <-ifelse((detail_drug$int_1 == "antibody" |
+                                detail_drug$int_2 == "antibody" |
+                                detail_drug$int_3 == "antibody" |
+                                detail_drug$int_4 == "antibody"), 1, 0)
+
+detail_drug$Suppressor <-ifelse((detail_drug$int_1 == "suppressor" |
+                                detail_drug$int_2 == "suppressor" |
+                                detail_drug$int_3 == "suppressor" |
+                                detail_drug$int_4 == "suppressor"), 1, 0)
+
+detail_drug$Activator <-ifelse((detail_drug$int_1 == "activator" |
+                                detail_drug$int_2 == "activator" |
+                                detail_drug$int_3 == "activator" |
+                                detail_drug$int_4 == "activator"), 1, 0)
+
+detail_drug$Ligand <-ifelse((detail_drug$int_1 == "ligand" |
+                                detail_drug$int_2 == "ligand" |
+                                detail_drug$int_3 == "ligand" |
+                                detail_drug$int_4 == "ligand"), 1, 0)
+
+detail_drug$Other <-ifelse((detail_drug$int_1 == "other" |
+                                detail_drug$int_2 == "other" |
+                                detail_drug$int_3 == "other" |
+                                detail_drug$int_4 == "other"), 1, 0)
+
+detail_drug_final <- dplyr::select(detail_drug, -int_1, -int_2, -int_3, -int_4)
+detail_drug_final
+
+
+# Aggregate and sum by gene name 
+detail_drug_agg <- aggregate(. ~ gene, data = detail_drug_final, max)
+
+# Order rows to match heatmap
+#phos_2a_gene # 63
+target <- as.vector(rownames(phos_2a_gene))
+detail_drug_agg <- detail_drug_agg[match(target, detail_drug_agg$gene),]
+
+# Label row names for heatmap
+row.names(detail_drug_agg) <- target
+detail_drug_agg
+
+# Remove gene column
+detail_agg_drug <- dplyr::select(detail_drug_agg, -gene)
+
+# Replace NA with 0 for plotting
+detail_agg_drug[is.na(detail_agg_drug)] <- 0
+
+detail_agg_drug$Inhibitor[detail_agg_drug$Inhibitor == 1] <- "Inhibitor"
+detail_agg_drug$Antagonist[detail_agg_drug$Antagonist == 1] <- "Antagonist"
+detail_agg_drug$Agonist[detail_agg_drug$Agonist == 1] <- "Agonist"
+detail_agg_drug$Antibody[detail_agg_drug$Antibody == 1] <- "Antibody"
+detail_agg_drug$Suppressor[detail_agg_drug$Suppressor == 1] <- "Suppressor"
+detail_agg_drug$Activator[detail_agg_drug$Activator == 1] <- "Activator"
+detail_agg_drug$Ligand[detail_agg_drug$Ligand == 1] <- "Ligand"
+detail_agg_drug$Other[detail_agg_drug$Other == 1] <- "Other"
+
+detail_agg_drug[detail_agg_drug == 0 ] <- "NA"
+
+detail_agg_drug
+
+```
+
+
+---
+
+```{r}
+
+## Result summary
+# Score is the total number of source databases listing the interaction (including PubMed articles)
+summary_drug <- resultSummary(result_drug) 
+summary_drug_score <- dplyr::select(summary_drug, Gene, Score)
+
+# Change to numeric and aggregate for total score
+summary_drug_score$Score <- as.numeric(summary_drug_score$Score)
+summary_drug_score <- aggregate(. ~ Gene, data = summary_drug_score, sum)
+
+# Order rows to match heatmap
+target <- as.vector(rownames(phos_2a_gene))
+summary_drug_score <- summary_drug_score[match(target, summary_drug_score$Gene),]
+
+# Label row names for heatmap
+row.names(summary_drug_score) <- target
+
+# Replace NA with 0 for plotting
+summary_drug_score$Score[is.na(summary_drug_score$Score) == TRUE] <- 0
+
+
+summary_drug_score
+
+```
+
+
+---
+
+```{r}
+
+### Final Figure Heatmap: Druggable Filtered ###`
+
+# Druggable Heatmap
+phos_drug_annotation <- HeatmapAnnotation(Comparison = c(rep('EGFR', 4), rep('KRAS', 4), 
+                                                    rep('TP53', 4), rep('Region', 2), 
+                                                    rep('Gender', 2), rep('Smoker', 5)), 
+                                       Cohort = c("Female", "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "Female", 
+                                                    "Male", "Asian", "Western", "TP53_Mutation"),
+                                       col = list(Comparison = c(EGFR = "#EF7C12",
+                                                              KRAS = "#FFB90F",
+                                                              TP53 = "#F7E690",
+                                                              Region = "#EFC7E6",
+                                                              Gender = "#CB87B4",
+                                                              Smoker = "#B25D94"),
+                                                  Cohort = c(Female = "#AFDFEF",
+                                                             Male = "#54BCD1" ,
+                                                              Asian = "#0076C0",
+                                                              Western = "#27408B",
+                                                              TP53_Mutation = "#D9565C")),
+                                       annotation_legend_param = list(legend_height = unit(1, "cm"),
+                                                                   legend_width = unit(0.20, "cm"),
+                                                                   title_gp = gpar(fontsize = 11),
+                                                                   labels_gp = gpar(fontsize = 9)))
+
+phos_heat_drug <- Heatmap(phos_2a_gene,
+                         top_annotation = phos_drug_annotation,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 6),
+                         top_annotation_height = unit(1, "cm"),
+                         heatmap_legend_param = list(legend_height = unit(1, "cm"),
+                                                     legend_width = unit(0.20, "cm"),
+                                                     title = "Q Value",
+                                                     title_gp = gpar(fontsize = 11),
+                                                     labels_gp = gpar(fontsize = 9)),
+                         col = colorRamp2(c(0, 1.0e-50, 0.0001, 0.01), 
+                                          c("gray90", "red3", "orangered2", "oldlace")),
+                         row_title_gp = gpar(fontsize = 10),
+                         rect_gp = gpar(col = "white", lwd = 1))
+  
+phos_heat_drug_fig <- draw(phos_heat_drug, heatmap_legend_side = "right")
+
+# Creat heatmap color scheme
+colors <-  structure(c("#3C5541", "#3C8C4D", "#3CBC38", 
+                       "#AFDE62", "#DFCEE0", "#CDB5CD",
+                       "#7473A6", "#132157", "gray90"), 
+                     names = c("Inhibitor", "Antagonist", "Agonist", 
+                               "Antibody", "Suppressor", "Activator",
+                               "Ligand", "Other", "NA"))
+
+# Heatmap annotations 
+#long_cn <- colnames(detail_agg_drug)
+#ha_rot_cn <- HeatmapAnnotation(text = anno_text(long_cn, rot = 45, just = "left", offset = unit(1, "mm"), gp = gpar(fontsize = 7)))
+
+ha_rot_cn <- HeatmapAnnotation(Interaction = c("Inhibitor", "Antagonist", "Agonist", 
+                                               "Antibody", "Suppressor", "Activator", 
+                                               "Ligand", "Other"),
+                               col = list(Interaction = c(Inhibitor = "#3C5541",
+                                                          Antagonist = "#3C8C4D",
+                                                          Agonist = "#3CBC38",
+                                                          Antibody = "#AFDE62",
+                                                          Suppressor = "#DFCEE0",
+                                                          Activator = "#CDB5CD",
+                                                          Ligand = "#7473A6",
+                                                          Other = "#132157")),
+                               annotation_legend_param = list(legend_height = unit(1, "cm"),
+                                                              title = "Interaction",
+                                                              legend_width = unit(0.20, "cm"),
+                                                              title_gp = gpar(fontsize = 11),
+                                                              labels_gp = gpar(fontsize = 9)),
+                               show_legend = FALSE)
+
+
+# Barplot
+row_anno <- rowAnnotation(barplot = row_anno_barplot(summary_drug_score$Score,
+                          axis_direction = "reverse", border = TRUE, axis = TRUE, axis_side = "top",
+                          gp = gpar(fill = "black")), 
+                          width = unit(2, "cm"))
+
+
+#colors = structure(c("#172869","#007BC3","#0099D5","#AFDFEF",
+#                     "#DFCEE0","#CDB5CD","#7473A6", "#132157"), 
+#                   names = c("Inhibitor", "Antagonist", "Agonist",
+#                             "Antibody", "Suppressor", "Activator", 
+#                             "Ligand", "Other"))
+                             
+# Create heatmap
+detail_drug_heat <- Heatmap(detail_agg_drug,
+                         show_column_names = F, 
+                         show_row_names = T,
+                         cluster_rows = F,
+                         cluster_columns = F,
+                         row_names_gp = gpar(fontsize = 0),
+                         column_names_gp = gpar(fontsize = 2),
+                         top_annotation_height = unit(1, "cm"),
+                         show_heatmap_legend = TRUE,
+                         heatmap_legend_param = list(legend_height = unit(1, "cm"),
+                                                     legend_width = unit(0.20, "cm"),
+                                                     title = "Interaction",
+                                                     title_gp = gpar(fontsize = 11),
+                                                     labels_gp = gpar(fontsize = 9)),
+                         col = colors,
+                         row_title_gp = gpar(fontsize = 10),
+                         column_names_side = "top",
+                         top_annotation = ha_rot_cn,
+                         width = unit(2, "cm"),
+                         rect_gp = gpar(col = "white", lwd = 1))
+
+#detail_drug_heat
+lgd <- Legend(labels = "Score", title = "Druggability", 
+              legend_gp = gpar(fill = "black"),
+              title_gp = gpar(fontsize = 11),
+              labels_gp = gpar(fontsize = 9))
+
+final_druggable <- draw(row_anno + detail_drug_heat + phos_heat_drug_fig, 
+                        gap = unit(c(2, 0, 0), "mm"), annotation_legend_list = list(lgd))
+
+final_druggable
+
+
+```
+
+
+---
+
+
+
+```{r}
+
+# Export figure
+
+png("phos_group2_final_druggable_heatmap_large_font.png", units="in", width=8, height=5, res=600)
+final_druggable
+dev.off()
+
+
+```
+
+
+---
+
+
