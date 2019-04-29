@@ -554,8 +554,10 @@ for (df_final in dataframes){
     heat_annotation$comp <- relevel(heat_annotation$comp, opt$group_1a)
     heat_annotation[, 'comp'] <- factor(heat_annotation[, 'comp'])
     names(heat_color) <- levels(heat_annotation$comp)
-    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Heat = heat_annotation$comp),
-                                               col = list(Heat = heat_color))
+    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Comparison = heat_annotation$comp),
+                                               col = list(Comparison = heat_color),
+                                               annotation_legend_param = list(title_gp = gpar(fontsize = 10),
+                                                                              labels_gp = gpar(fontsize = 8)))
   } else if (opt$group_comp == "two") {
     heat_annotation <- heat_filter
     heat_annotation <- heat_annotation[((heat_annotation$comp_a == opt$group_1a & 
@@ -578,7 +580,10 @@ for (df_final in dataframes){
     heat_color <- c(color1, "gray85")
     heat_annotation[, 'comp'] <- factor(heat_annotation[, 'comp'])
     names(heat_color) <- levels(heat_annotation$comp)
-    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Heat = heat_annotation$comp), col = list(Heat = heat_color))
+    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Comparison = heat_annotation$comp), 
+                                               col = list(Comparison = heat_color),
+                                               annotation_legend_param = list(title_gp = gpar(fontsize = 10),
+                                                                              labels_gp = gpar(fontsize = 8)))
   } else if (opt$group_comp == "three") {
     heat_annotation <- heat_filter
     heat_annotation <- heat_annotation[((heat_annotation$comp_a == opt$group_1a & 
@@ -604,12 +609,15 @@ for (df_final in dataframes){
     heat_annotation$comp <- relevel(heat_annotation$comp, comp_a)
     heat_annotation[, 'comp'] <- factor(heat_annotation[, 'comp'])
     names(heat_color) <- levels(heat_annotation$comp)
-    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Heat = heat_annotation$comp), col = list(Heat = heat_color))
+    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Comparison = heat_annotation$comp), 
+                                               col = list(Comparison = heat_color),
+                                               annotation_legend_param = list(title_gp = gpar(fontsize = 10),
+                                                                              labels_gp = gpar(fontsize = 8)))
   }
   
   # Set gene printing options
   if (nrow(fraction_heat) < 75){
-    heat_font <- 5
+    heat_font <- 6
   } else {
     heat_font <- 0
   }
@@ -626,7 +634,7 @@ for (df_final in dataframes){
                                                      title = NULL),
                          col = colorRamp2(c(0, 0.5, 1), c("white", color2, color1)),
                          row_title = "Fraction Outliers",
-                         row_title_gp = gpar(fontsize = 10))
+                         row_title_gp = gpar(fontsize = 12))
   
   h1 <- draw(frac_heat_1, heatmap_legend_side = "left")
   
