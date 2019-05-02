@@ -556,8 +556,8 @@ for (df_final in dataframes){
     names(heat_color) <- levels(heat_annotation$comp)
     heat_annotation_final <- HeatmapAnnotation(df = data.frame(Comparison = heat_annotation$comp),
                                                col = list(Comparison = heat_color),
-                                               annotation_legend_param = list(title_gp = gpar(fontsize = 10),
-                                                                              labels_gp = gpar(fontsize = 8)))
+                                               annotation_legend_param = list(title_gp = gpar(fontsize = 12),
+                                                                              labels_gp = gpar(fontsize = 10)))
   } else if (opt$group_comp == "two") {
     heat_annotation <- heat_filter
     heat_annotation <- heat_annotation[((heat_annotation$comp_a == opt$group_1a & 
@@ -582,8 +582,8 @@ for (df_final in dataframes){
     names(heat_color) <- levels(heat_annotation$comp)
     heat_annotation_final <- HeatmapAnnotation(df = data.frame(Comparison = heat_annotation$comp), 
                                                col = list(Comparison = heat_color),
-                                               annotation_legend_param = list(title_gp = gpar(fontsize = 10),
-                                                                              labels_gp = gpar(fontsize = 8)))
+                                               annotation_legend_param = list(title_gp = gpar(fontsize = 12),
+                                                                              labels_gp = gpar(fontsize = 10)))
   } else if (opt$group_comp == "three") {
     heat_annotation <- heat_filter
     heat_annotation <- heat_annotation[((heat_annotation$comp_a == opt$group_1a & 
@@ -611,13 +611,13 @@ for (df_final in dataframes){
     names(heat_color) <- levels(heat_annotation$comp)
     heat_annotation_final <- HeatmapAnnotation(df = data.frame(Comparison = heat_annotation$comp), 
                                                col = list(Comparison = heat_color),
-                                               annotation_legend_param = list(title_gp = gpar(fontsize = 10),
-                                                                              labels_gp = gpar(fontsize = 8)))
+                                               annotation_legend_param = list(title_gp = gpar(fontsize = 12),
+                                                                              labels_gp = gpar(fontsize = 10)))
   }
   
   # Set gene printing options
-  if (nrow(fraction_heat) < 75){
-    heat_font <- 6
+  if (nrow(fraction_heat) < 50){
+    heat_font <- 12
   } else {
     heat_font <- 0
   }
