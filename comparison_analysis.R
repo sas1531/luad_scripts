@@ -468,8 +468,8 @@ for (df_final in dataframes){
   # If p_value_corrected is greater than FDR cutoff, insert yes (significant outlier)
   fdr <- opt$sig_cutoff
   df_fraction_outlier$sig_outlier_q <- NA
-  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value <= 0.01] <- "yes"
-  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value > 0.01] <- "no"
+  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value <= 0.05] <- "yes" ####
+  df_fraction_outlier$sig_outlier_q[df_fraction_outlier$q_value > 0.05] <- "no" ####
   
   # If fraction group 1 mean is greater than group 2 fraction mean, insert yes (significant outlier)
   df_fraction_outlier$sig_outlier_mean[(df_fraction_outlier$group1_fraction_mean) > (df_fraction_outlier$group2_fraction_mean)] <- "yes"
