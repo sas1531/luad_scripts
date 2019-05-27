@@ -16,17 +16,17 @@ options(warn=1)
 # Set up command line
 option_list = list(
   make_option(c("--up"), type="character", default=NULL, 
-              help="up-regulated dataset file path from outlier analysis", metavar="character"),
+              help="up-regulated data file path from outlier analysis", metavar="character"),
   make_option(c("--down"), type="character", default=NULL, 
-              help="down-regulated dataset file path from outlier analysis", metavar="character"),
+              help="down-regulated data file path from outlier analysis", metavar="character"),
   make_option(c("--meta"), type="character", default=NULL, 
-              help="meta dataset file path from outlier analysis", metavar="character"),
+              help="meta data file path from outlier analysis", metavar="character"),
   make_option(c("-o", "--out"), type="character", default="out", 
               help="output file prefix for all comparison outputs, do not include file extension", 
               metavar="character"),
-  make_option(c("--sig_cutoff"), type="character", default='0.05', 
-              help="false discovery rate cutoff as decimal (ex. 0.05)", 
-              metavar="character"),
+  #make_option(c("--sig_cutoff"), type="character", default='0.05', 
+  #            help="false discovery rate cutoff as decimal (ex. 0.05)", 
+  #            metavar="character"),
   make_option(c("--comparison_a"), type="character", default="Type", 
               help="Column name that identifies comparison A (e.g. Region, Gender, Type)", 
               metavar="character"),
@@ -55,18 +55,18 @@ option_list = list(
   make_option(c("--normal_tumor"), type="character", default="both", 
               help="If your samples include both tumor and normal samples AND you want to 
               isolate tumor samples insert 'both'. If you want to compare normal and tumor 
-              samples insert 'both_normal'. If you only have tumor samples insert 'tumor_only"
+              samples insert 'both_normal'. If you only have tumor samples insert 'tumor_only'"
               , metavar="character"),
   make_option(c("--tumor_column"), type="character", default="Type", 
               help="Name of column that indicates whether or not the sample is a tumor sample 
               or normal sample (only required if there are normal and tumor samples", 
               metavar="character"),
   make_option(c("--tumor_group"), type="character", default="Tumor", 
-              help="Name of tumor group in tumor column (only reguired if there are normal 
+              help="Name of tumor group in tumor column (only required if there are normal 
               and tumor samples", metavar="character"),
-  make_option(c("--prot"), type="character", default="no", 
-              help="'yes' if the input data is proteomic and includes isoforms with the 
-              same gene name", metavar="character"),
+  #make_option(c("--prot"), type="character", default="no", 
+  #            help="'yes' if the input data is proteomic and includes isoforms with the 
+  #            same gene name", metavar="character"),
   make_option(c("--gene_list"), type="character", default="no", 
               help="Path to gene list: only required if you want to isolate specific genes. 
               Text file format", metavar="character")

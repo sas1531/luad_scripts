@@ -16,7 +16,7 @@ options(warn=1)
 # Set up command line
 option_list = list(
   make_option(c("-f", "--file"), type="character", default=NULL, 
-              help="Input file name", metavar="character"),
+              help="Input file path", metavar="character"),
   make_option(c("--skip"), type="character", default=2, 
               help="How many lines to skip, not including the header", metavar="integer"),
   make_option(c("--row_gene"), type="integer", default=1, 
@@ -39,10 +39,10 @@ option_list = list(
               and 'not_phospho' if it isn't", metavar="character"),
   make_option(c("-b", "--base_log"), type="character", default="not_log10", 
               help="if data is in 'log10' specify here and it will be transformed 
-              into log2: options c(not_log10, log10)", metavar="character"),
-  make_option(c("--prot"), type="character", default="no", 
-              help="Yes if the input data is proteomic and includes isoforms with the 
-              same gene name", metavar="character")
+              into log2: options c(not_log10, log10)", metavar="character")
+  #make_option(c("--prot"), type="character", default="no", 
+  #            help="Yes if the input data is proteomic and includes isoforms with the 
+  #            same gene name", metavar="character")
   ); 
 
 opt_parser = OptionParser(option_list=option_list);
@@ -80,6 +80,11 @@ log10_transform <- function(df_gene, log){
   }
 }
 
+
+# Aggregate phosphosites 
+count_not_outliers <-  function(x) {length(which(x==0))}
+count_outliers <- function(x) {length(which(x==1))}
+
 ### Phosphosite aggregation function
 # If data is phosphoproteomic, aggregate and sum outlier values 
 agg_phospho <- function(df_outlier_agg, df_not_outlier_agg, tag){
@@ -112,9 +117,9 @@ colnames(df)[opt$meta_column] <- "GeneSymbol"
 df_gene <- df[c(opt$row_gene:nrow(df)), c(1, opt$meta_column, opt$column_gene:ncol(df))]
 
 # If the data is proteomic and has isoforms, combine the genesymbol with id (isoform)
-if (opt$prot == "yes"){
-  df_gene$GeneSymbol <- paste(df_gene$GeneSymbol, df_gene$id, sep=" - ")
-}
+#if (opt$prot == "yes"){
+#  df_gene$GeneSymbol <- paste(df_gene$GeneSymbol, df_gene$id, sep=" - ")
+#}
 
 
 # Change dataframe values from log10 to log2 if needed
@@ -181,10 +186,6 @@ df_outlier_minus <- cbind(df_outlier_minus, count = rowSums(df_outlier_minus))
 # Bind dataframe with original gene IDs
 df_outlier_gene_plus <- cbind(df_genesymbol, df_outlier_plus)
 df_outlier_gene_minus <- cbind(df_genesymbol, df_outlier_minus)
-
-# Aggregate phosphosites 
-count_not_outliers <-  function(x) {length(which(x==0))}
-count_outliers <- function(x) {length(which(x==1))}
 
 # Plus
 df_final_outlier_plus <- dplyr::select(df_outlier_gene_plus, -count)
