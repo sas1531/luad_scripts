@@ -65,95 +65,95 @@ tp53_all <- read.table("./comparison_results_1_dgidb_fdr_0.01/luad2_phos_dgidb_T
 tp53_all$GeneSymbol <- as.character(tp53_all$GeneSymbol)
 colnames(tp53_all)[2] <- "tp53_all"
 
-egfr_female <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Gender_EGFR_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_female <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Gender_EGFR_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
 egfr_female$GeneSymbol <- as.character(egfr_female$GeneSymbol)
 colnames(egfr_female)[2] <- "egfr_female"
 
-egfr_male <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Gender_EGFR_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_male <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Gender_EGFR_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
 egfr_male$GeneSymbol <- as.character(egfr_male$GeneSymbol)
 colnames(egfr_male)[2] <- "egfr_male"
 
-kras_female <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Gender_KRAS_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_female <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Gender_KRAS_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
 kras_female$GeneSymbol <- as.character(kras_female$GeneSymbol)
 colnames(kras_female)[2] <- "kras_female"
 
-kras_male <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Gender_KRAS_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_male <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Gender_KRAS_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
 kras_male$GeneSymbol <- as.character(kras_male$GeneSymbol)
 colnames(kras_male)[2] <- "kras_male"
 
-tp53_female <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Gender_TP53_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_female <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Gender_TP53_up_female_1_female_0___sig_outliers.txt", header = TRUE, sep = "\t")
 tp53_female$GeneSymbol <- as.character(tp53_female$GeneSymbol)
 colnames(tp53_female)[2] <- "tp53_female"
 
-tp53_male <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Gender_TP53_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_male <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Gender_TP53_up_male_1_male_0___sig_outliers.txt", header = TRUE, sep = "\t")
 tp53_male$GeneSymbol <- as.character(tp53_male$GeneSymbol)
 colnames(tp53_male)[2] <- "tp53_male"
 
-egfr_asian <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Region_EGFR_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_asian <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Region_EGFR_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
 egfr_asian$GeneSymbol <- as.character(egfr_asian$GeneSymbol)
 colnames(egfr_asian)[2] <- "egfr_asian"
 
-egfr_western <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Region_EGFR_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+egfr_western <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Region_EGFR_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
 egfr_western$GeneSymbol <- as.character(egfr_western$GeneSymbol)
 colnames(egfr_western)[2] <- "egfr_western"
 
-gender_asian <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Region_Gender_up_asian_female_asian_male___sig_outliers.txt", header = TRUE, sep = "\t")
+gender_asian <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Region_Gender_up_asian_female_asian_male___sig_outliers.txt", header = TRUE, sep = "\t")
 gender_asian$GeneSymbol <- as.character(gender_asian$GeneSymbol)
 colnames(gender_asian)[2] <- "gender_asian"
 
-region_female <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Region_Gender_up_asian_female_western_female___sig_outliers.txt", header = TRUE, sep = "\t")
+region_female <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Region_Gender_up_asian_female_western_female___sig_outliers.txt", header = TRUE, sep = "\t")
 region_female$GeneSymbol <- as.character(region_female$GeneSymbol)
 colnames(region_female)[2] <- "region_female"
 
-region_male <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Region_Gender_up_asian_male_western_male___sig_outliers.txt", header = TRUE, sep = "\t")
+region_male <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Region_Gender_up_asian_male_western_male___sig_outliers.txt", header = TRUE, sep = "\t")
 region_male$GeneSymbol <- as.character(region_male$GeneSymbol)
 colnames(region_male)[2] <- "region_male"
 
-gender_western <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Region_Gender_up_western_female_western_male___sig_outliers.txt", header = TRUE, sep = "\t")
+gender_western <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Region_Gender_up_western_female_western_male___sig_outliers.txt", header = TRUE, sep = "\t")
 gender_western$GeneSymbol <- as.character(gender_western$GeneSymbol)
 colnames(gender_western)[2] <- "gender_western"
 
-kras_asian <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Region_KRAS_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_asian <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Region_KRAS_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
 kras_asian$GeneSymbol <- as.character(kras_asian$GeneSymbol)
 colnames(kras_asian)[2] <- "kras_asian"
 
-kras_western <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Region_KRAS_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+kras_western <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Region_KRAS_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
 kras_western$GeneSymbol <- as.character(kras_western$GeneSymbol)
 colnames(kras_western)[2] <- "kras_western"
 
-tp53_asian <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Region_TP53_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_asian <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Region_TP53_up_asian_1_asian_0___sig_outliers.txt", header = TRUE, sep = "\t")
 tp53_asian$GeneSymbol <- as.character(tp53_asian$GeneSymbol)
 colnames(tp53_asian)[2] <- "tp53_asian"
 
-tp53_western <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Region_TP53_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
+tp53_western <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Region_TP53_up_western_1_western_0___sig_outliers.txt", header = TRUE, sep = "\t")
 tp53_western$GeneSymbol <- as.character(tp53_western$GeneSymbol)
 colnames(tp53_western)[2] <- "tp53_western"
 
-smoker_female <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Smoking_Gender_up_smoker_female_non-smoker_female___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_female <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Smoking_Gender_up_smoker_female_non-smoker_female___sig_outliers.txt", header = TRUE, sep = "\t")
 smoker_female$GeneSymbol <- as.character(smoker_female$GeneSymbol)
 colnames(smoker_female)[2] <- "smoker_female"
 
-#smoker_male <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Smoking_Gender_up_smoker_male_non-smoker_male___sig_outliers.txt", header = TRUE, sep = "\t")
+#smoker_male <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Smoking_Gender_up_smoker_male_non-smoker_male___sig_outliers.txt", header = TRUE, sep = "\t")
 #smoker_male$GeneSymbol <- as.character(smoker_male$GeneSymbol)
 #colnames(smoker_male)[2] <- "smoker_male"
 
-#smoker_asian <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Smoking_Region_up_smoker_asian_non-smoker_asian___sig_outliers.txt", header = TRUE, sep = "\t")
+#smoker_asian <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Smoking_Region_up_smoker_asian_non-smoker_asian___sig_outliers.txt", header = TRUE, sep = "\t")
 #smoker_asian$GeneSymbol <- as.character(smoker_asian$GeneSymbol)
 #colnames(smoker_asian)[2] <- "smoker_asian"
 
-smoker_western <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Smoking_Region_up_smoker_western_non-smoker_western___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_western <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Smoking_Region_up_smoker_western_non-smoker_western___sig_outliers.txt", header = TRUE, sep = "\t")
 smoker_western$GeneSymbol <- as.character(smoker_western$GeneSymbol)
 colnames(smoker_western)[2] <- "smoker_western"
 
-smoker_egfr <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Smoking_EGFR_up_smoker_1_non-smoker_1___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_egfr <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Smoking_EGFR_up_smoker_1_non-smoker_1___sig_outliers.txt", header = TRUE, sep = "\t")
 smoker_egfr$GeneSymbol <- as.character(smoker_egfr$GeneSymbol)
 colnames(smoker_egfr)[2] <- "smoker_egfr"
 
-#smoker_kras <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Smoking_KRAS_up_smoker_1_non-smoker_1___sig_outliers.txt", header = TRUE, sep = "\t")
+#smoker_kras <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Smoking_KRAS_up_smoker_1_non-smoker_1___sig_outliers.txt", header = TRUE, sep = "\t")
 #smoker_kras$GeneSymbol <- as.character(smoker_kras$GeneSymbol)
 #colnames(smoker_kras)[2] <- "smoker_kras"
 
-smoker_tp53 <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_Smoking_TP53_up_smoker_1_non-smoker_1___sig_outliers.txt", header = TRUE, sep = "\t")
+smoker_tp53 <- read.table("./comparison_results_2_dgidb_fdr_0.01/luad2_phos_dgidb_0.01_Smoking_TP53_up_smoker_1_non-smoker_1___sig_outliers.txt", header = TRUE, sep = "\t")
 smoker_tp53$GeneSymbol <- as.character(smoker_tp53$GeneSymbol)
 colnames(smoker_tp53)[2] <- "smoker_tp53"
 
@@ -192,9 +192,17 @@ phos_dgidb[is.na(phos_dgidb)] <- 0
 
 ###
 
+# Export significant gene list
+phos_sig_gene_list <- phos_dgidb[,1]
+phos_sig_gene_list
+write.table(phos_sig_gene_list, file = "phos_sig_gene_list_all_comparisons.txt", 
+            sep = "\t", quote = FALSE, row.name = FALSE)
+
 phos_dgidb_gene <- phos_dgidb[,-1]
 rownames(phos_dgidb_gene) <- phos_dgidb[,1]
 cohorts_all <- colnames(phos_dgidb_gene)
+cohorts_all
+
 phos_dgidb_annotation <- HeatmapAnnotation(df = as.data.frame(cohorts_all),
                                        col = list(cohorts_all = c(egfr_all = "coral",
                                                               egfr_female = "dodgerblue4",
@@ -497,7 +505,8 @@ phos_heat_drug_dgidb <- Heatmap(phos_dgidb_gene,
                          col = colorRamp2(c(0, 1.0e-50, 0.0001, 0.01), 
                                           c("gray90", "red3", "orangered2", "oldlace")),
                          row_title_gp = gpar(fontsize = 10),
-                         rect_gp = gpar(col = "white", lwd = 0.75))
+                         rect_gp = gpar(col = "white", lwd = 0.75),
+                         width = unit(13, "cm"))
 
 # Decorate heatmap
 phos_heat_drug_dgidb_fig <- draw(phos_heat_drug_dgidb, heatmap_legend_side = "right")
@@ -585,7 +594,9 @@ fda_drug_dgidb_heat <- Heatmap(fda_int$FDA_approved,
                                                      labels_gp = gpar(fontsize = 9)),
                          col = colors_2,
                          row_title_gp = gpar(fontsize = 10),
-                         rect_gp = gpar(col = "white", lwd = 0.75))
+                         rect_gp = gpar(col = "white", lwd = 0.75),
+                         name = "phos_fda",
+                         width = unit(0.5, "cm"))
 
 
 #detail_drug_heat
@@ -639,7 +650,7 @@ decorate_heatmap_body("phos_heat", {
 
 ```{r phos save heatmap}
 
-png("phos_dgidb_final_druggable_heatmap.png", units="in", width=10, height=6, res=800)
+png("phos_dgidb_final_druggable_heatmap_fdr_0.01.png", units="in", width=10, height=6, res=800)
 
 final_druggable <- draw(row_anno_dgidb + fda_drug_dgidb_heat +
                           interactions_drug_dgidb_heat + phos_heat_drug_dgidb_fig,
@@ -677,6 +688,11 @@ decorate_heatmap_body("phos_heat", {
 
 decorate_heatmap_body("phos_int", {
 	grid.rect(0, 0, width = 1, height = 1.08, just = c("left", "bottom"), 
+		gp = gpar(lwd = 0.75, col = "black", fill = "transparent"))
+})
+
+decorate_heatmap_body("phos_fda", {
+	grid.rect(0, 0, width = 1, height = 1, just = c("left", "bottom"), 
 		gp = gpar(lwd = 0.75, col = "black", fill = "transparent"))
 })
 
@@ -863,6 +879,12 @@ prot_dgidb <- full_join(prot_dgidb, gender_western_prot, by = "GeneSymbol")
 prot_dgidb[is.na(prot_dgidb)] <- 0
 
 ###
+
+# Export significant gene list
+prot_sig_gene_list <- prot_dgidb[,1]
+prot_sig_gene_list
+write.table(prot_sig_gene_list, file = "prot_sig_gene_list_all_comparisons.txt", 
+            sep = "\t", quote = FALSE, row.name = FALSE)
 
 prot_dgidb_gene <- prot_dgidb[,-1]
 rownames(prot_dgidb_gene) <- prot_dgidb[,1]
@@ -1188,7 +1210,8 @@ prot_heat_drug_dgidb <- Heatmap(prot_dgidb_gene,
                          col = colorRamp2(c(0, 1.0e-50, 0.01, 0.05), 
                                           c("gray90", "red3", "orangered2", "oldlace")),
                          row_title_gp = gpar(fontsize = 10),
-                         rect_gp = gpar(col = "white", lwd = 0.75))
+                         rect_gp = gpar(col = "white", lwd = 0.75),
+                         width = unit(7.5, "cm"))
 
 # Decorate heatmap
 prot_heat_drug_dgidb_fig <- draw(prot_heat_drug_dgidb, heatmap_legend_side = "right")
@@ -1273,7 +1296,9 @@ fda_drug_dgidb_heat_prot <- Heatmap(fda_int_prot$FDA_approved,
                                                      labels_gp = gpar(fontsize = 9)),
                          col = colors_2,
                          row_title_gp = gpar(fontsize = 10),
-                         rect_gp = gpar(col = "white", lwd = 0.75))
+                         rect_gp = gpar(col = "white", lwd = 0.75),
+                         name = "prot_fda",
+                         width = unit(0.5, "cm"))
 
 
 #detail_drug_heat
@@ -1328,7 +1353,7 @@ decorate_heatmap_body("prot_int", {
 
 ```{r prot heatmap save}
 
-png("prot_dgidb_final_druggable_heatmap.png", units="in", width=9, height=4.5, res=800)
+png("prot_dgidb_final_druggable_heatmap_fdr_0.05.png", units="in", width=8, height=4.5, res=800)
 
 final_druggable_prot <- draw(row_anno_dgidb_prot + fda_drug_dgidb_heat_prot +
                           interactions_prot_drug_dgidb_heat + prot_heat_drug_dgidb_fig,
@@ -1362,6 +1387,11 @@ decorate_heatmap_body("prot_heat", {
 
 decorate_heatmap_body("prot_int", {
 	grid.rect(0, 0, width = 1, height = 1.11, just = c("left", "bottom"), 
+		gp = gpar(lwd = 0.75, col = "black", fill = "transparent"))
+})
+
+decorate_heatmap_body("prot_fda", {
+	grid.rect(0, 0, width = 1, height = 1, just = c("left", "bottom"), 
 		gp = gpar(lwd = 0.75, col = "black", fill = "transparent"))
 })
 
@@ -1546,6 +1576,12 @@ rna_dgidb <- full_join(rna_dgidb, smoker_female_rna, by = "GeneSymbol")
 rna_dgidb[is.na(rna_dgidb)] <- 0
 
 ##
+
+# Export significant gene list
+rna_sig_gene_list <- rna_dgidb[,1]
+rna_sig_gene_list
+write.table(rna_sig_gene_list, file = "rna_sig_gene_list_all_comparisons.txt", 
+            sep = "\t", quote = FALSE, row.name = FALSE)
 
 rna_dgidb_gene <- rna_dgidb[,-1]
 rownames(rna_dgidb_gene) <- rna_dgidb[,1]
@@ -1879,7 +1915,8 @@ rna_heat_drug_dgidb <- Heatmap(rna_dgidb_gene,
                          col = colorRamp2(c(0, 1.0e-50, 0.01, 0.05), 
                                           c("gray90", "red3", "orangered2", "oldlace")),
                          row_title_gp = gpar(fontsize = 10),
-                         rect_gp = gpar(col = "white", lwd = 0.75))
+                         rect_gp = gpar(col = "white", lwd = 0.75),
+                         width = unit(9, "cm"))
 
 # Decorate heatmap
 rna_heat_drug_dgidb_fig <- draw(rna_heat_drug_dgidb, heatmap_legend_side = "right")
@@ -1964,7 +2001,9 @@ fda_drug_dgidb_heat_rna <- Heatmap(fda_int_rna$FDA_approved,
                                                      labels_gp = gpar(fontsize = 9)),
                          col = colors_2,
                          row_title_gp = gpar(fontsize = 10),
-                         rect_gp = gpar(col = "white", lwd = 0.75))
+                         rect_gp = gpar(col = "white", lwd = 0.75),
+                         name = "rna_fda",
+                         width = unit(0.5, "cm"))
 
 
 #detail_drug_heat
@@ -2023,7 +2062,7 @@ decorate_heatmap_body("rna_int", {
 
 ```{r rna heatmap save}
 
-png("rna_dgidb_final_druggable_heatmap.png", units="in", width=10, height=6, res=800)
+png("rna_dgidb_final_druggable_heatmap_fdr_0.05.png", units="in", width=9, height=6, res=800)
 
 final_druggable_rna <- draw(row_anno_dgidb_rna + fda_drug_dgidb_heat_rna +
                           interactions_rna_drug_dgidb_heat + rna_heat_drug_dgidb_fig,
@@ -2061,6 +2100,11 @@ decorate_heatmap_body("rna_heat", {
 
 decorate_heatmap_body("rna_int", {
 	grid.rect(0, 0, width = 1, height = 1.08, just = c("left", "bottom"), 
+		gp = gpar(lwd = 0.75, col = "black", fill = "transparent"))
+})
+
+decorate_heatmap_body("rna_fda", {
+	grid.rect(0, 0, width = 1, height = 1, just = c("left", "bottom"), 
 		gp = gpar(lwd = 0.75, col = "black", fill = "transparent"))
 })
 
@@ -2240,6 +2284,11 @@ cnv_dgidb <- full_join(cnv_dgidb, region_male_cnv, by = "GeneSymbol")
 cnv_dgidb[is.na(cnv_dgidb)] <- 0
 
 ##
+
+cnv_sig_gene_list <- cnv_dgidb[,1]
+cnv_sig_gene_list
+write.table(cnv_sig_gene_list, file = "cnv_sig_gene_list_all_comparisons.txt", 
+            sep = "\t", quote = FALSE, row.name = FALSE)
 
 cnv_dgidb_gene <- cnv_dgidb[,-1]
 rownames(cnv_dgidb_gene) <- cnv_dgidb[,1]
@@ -2589,7 +2638,8 @@ cnv_heat_drug_dgidb <- Heatmap(cnv_dgidb_gene,
                          col = colorRamp2(c(0, 1.0e-50, 0.01, 0.05), 
                                           c("gray90", "red3", "orangered2", "oldlace")),
                          row_title_gp = gpar(fontsize = 10),
-                         rect_gp = gpar(col = "white", lwd = 0.75))
+                         rect_gp = gpar(col = "white", lwd = 0.75),
+                         width = unit(3, "cm"))
 
 # Decorate heatmap
 cnv_heat_drug_dgidb_fig <- draw(cnv_heat_drug_dgidb, heatmap_legend_side = "right")
@@ -2675,7 +2725,8 @@ fda_drug_dgidb_heat_cnv <- Heatmap(fda_int_cnv$FDA_approved,
                          col = colors_2,
                          row_title_gp = gpar(fontsize = 10),
                          rect_gp = gpar(col = "white", lwd = 0.75),
-                         name = "cnv_fda")
+                         name = "cnv_fda",
+                         width = unit(0.5, "cm"))
 
 
 #detail_drug_heat
@@ -2729,7 +2780,7 @@ decorate_heatmap_body("cnv_fda", {
 
 ```{r cnv heatmap save}
 
-png("cnv_dgidb_final_druggable_heatmap.png", units="in", width=6, height=6, res=800)
+png("cnv_dgidb_final_druggable_heatmap_fdr_0.01_iqr_1.25.png", units="in", width=6, height=6, res=800)
 
 final_druggable_cnv <- draw(row_anno_dgidb_cnv + fda_drug_dgidb_heat_cnv +
                           interactions_cnv_drug_dgidb_heat + cnv_heat_drug_dgidb_fig,
@@ -2767,6 +2818,104 @@ dev.off()
 
 ---
 
+
+---
+
+
+---
+
+
+```{r all gene list comparison all data types}
+
+# Gene list comparison
+phos_sig_gene_list
+prot_sig_gene_list
+rna_sig_gene_list
+cnv_sig_gene_list
+
+# Make gene list dataframe
+phos_list <- as.data.frame(phos_sig_gene_list)
+phos_list$phos <- 1
+colnames(phos_list) <- c("gene", "phos")
+
+prot_list <- as.data.frame(prot_sig_gene_list)
+prot_list$prot <- 1
+colnames(prot_list) <- c("gene", "prot")
+
+rna_list <- as.data.frame(rna_sig_gene_list)
+rna_list$rna <- 1
+colnames(rna_list) <- c("gene", "rna")
+
+cnv_list <- as.data.frame(cnv_sig_gene_list)
+cnv_list$cnv <- 1
+colnames(cnv_list) <- c("gene", "cnv")
+
+# Join
+gene_list <- full_join(phos_list, prot_list, by = "gene")
+gene_list <- full_join(gene_list, rna_list, by = "gene")
+gene_list <- full_join(gene_list, cnv_list, by = "gene")
+gene_list[is.na(gene_list)] <- 0
+
+# Sum then filter 
+gene_list$sum <- rowSums(gene_list[,2:5])
+gene_list_final <- filter(gene_list, sum > 1)
+#gene_list_final <- gene_list
+
+# Reassign numbers to sum
+gene_list_final$phos[gene_list_final$phos == 1] <- (gene_list_final$sum[gene_list_final$phos == 1]) 
+gene_list_final$prot[gene_list_final$prot == 1] <- (gene_list_final$sum[gene_list_final$prot == 1]) 
+gene_list_final$rna[gene_list_final$rna == 1] <- (gene_list_final$sum[gene_list_final$rna == 1]) 
+gene_list_final$cnv[gene_list_final$cnv == 1] <- (gene_list_final$sum[gene_list_final$cnv == 1]) 
+
+# Create heatmap
+gene_list_heat_df <- gene_list_final
+rownames(gene_list_heat_df) <- gene_list_heat_df$gene
+gene_list_heat_df <- dplyr::select(gene_list_heat_df, phos, prot, rna, cnv)
+
+# colors
+colors_list <-  structure(c("#007BC3", "#AFDFEF", "blue", "gray85"), 
+                     names = c(4, 3, 2, 0))
+
+# Annotation
+gene_list_anno <- HeatmapAnnotation(Data = c("Phosphoproteome", "Proteome", "RNA", "CNV"),
+                                    col = list(Data = c(Phosphoproteome = "#2CB11B",
+                                                        Proteome = "#BDDE9B",
+                                                        RNA = "#EDA9AB",
+                                                        CNV = "#D9565C")))
+
+
+gene_list_heat <- Heatmap(gene_list_heat_df,
+                    top_annotation = gene_list_anno,
+                    show_column_names = F, 
+                    show_row_names = T,
+                    cluster_rows = T,
+                    cluster_columns = F,
+                    row_names_gp = gpar(fontsize = 8),
+                    column_names_gp = gpar(fontsize = 5),
+                    clustering_method_rows = "single",
+                    top_annotation_height = unit(0.5, "cm"),
+                    heatmap_legend_param = list(legend_height = unit(3, "in"),
+                                                title = NULL),
+                    col = colorRamp2(c(0, 1, 3, 4), 
+                                          c("gray90", "white", "#007BC3", "#172869")),
+                    row_title = "Sum of Significant Gene by Data Type",
+                    rect_gp = gpar(col = "white", lwd = 0.75))
+
+gene_list_heat
+
+gene_list_heat_fig <- draw(gene_list_heat, heatmap_legend_side = "left")
+                        
+
+```
+
+
+```{r save gene list comparison}
+
+png("gene_list_comparison_dgidb_final.png", units="in", width=8, height=5, res=800)
+gene_list_heat_fig
+dev.off()
+
+```
 
 
 
