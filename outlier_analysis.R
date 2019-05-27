@@ -20,9 +20,9 @@ option_list = list(
   make_option(c("--skip"), type="character", default=2, 
               help="How many lines to skip, not including the header", metavar="integer"),
   make_option(c("--row_gene"), type="integer", default=1, 
-              help="Row number where the genes and values begin", metavar="character"),
+              help="Row number where the features begin", metavar="character"),
   make_option(c("--column_gene"), type="integer", default=1, 
-              help="Column number where the genes and values begin", metavar="character"),
+              help="Column number where the features begin", metavar="character"),
   make_option(c("--meta_column"), type="integer", default=1, 
               help="Column number where gene IDs are located for labelling", metavar="character"),
   make_option(c("-o", "--out"), type="character", default="out", 
@@ -39,10 +39,10 @@ option_list = list(
               and 'not_phospho' if it isn't", metavar="character"),
   make_option(c("-b", "--base_log"), type="character", default="not_log10", 
               help="if data is in 'log10' specify here and it will be transformed 
-              into log2: options c(not_log10, log10)", metavar="character")
-  #make_option(c("--prot"), type="character", default="no", 
-  #            help="Yes if the input data is proteomic and includes isoforms with the 
-  #            same gene name", metavar="character")
+              into log2: options c(not_log10, log10)", metavar="character"),
+  make_option(c("--prot"), type="character", default="no", 
+              help="Yes if the input data is proteomic and includes isoforms with the 
+              same gene name", metavar="character")
   ); 
 
 opt_parser = OptionParser(option_list=option_list);
@@ -117,9 +117,9 @@ colnames(df)[opt$meta_column] <- "GeneSymbol"
 df_gene <- df[c(opt$row_gene:nrow(df)), c(1, opt$meta_column, opt$column_gene:ncol(df))]
 
 # If the data is proteomic and has isoforms, combine the genesymbol with id (isoform)
-#if (opt$prot == "yes"){
-#  df_gene$GeneSymbol <- paste(df_gene$GeneSymbol, df_gene$id, sep=" - ")
-#}
+if (opt$prot == "yes"){
+  df_gene$GeneSymbol <- paste(df_gene$GeneSymbol, df_gene$id, sep=" - ")
+}
 
 
 # Change dataframe values from log10 to log2 if needed
@@ -213,7 +213,7 @@ write.table(df_gene, file=out_dataframe, quote=FALSE, sep='\t', col.names = NA)
 # Write out meta data
 write.table(meta_df, file=out_meta_data, quote=FALSE, sep='\t', col.names = NA)
 # Write out sample names
-write.table(df_names, out_names, sep=',', row.names=F, col.names = F)
+write.table(df_names, out_names, sep=',', row.names=F, col.names = F, quote=FALSE)
 # Write out outlier dataframes
 write.table(df_final_plus, file = out_outlier_plus, quote=FALSE, sep='\t', col.names = NA)
 write.table(df_final_minus, file = out_outlier_minus, quote=FALSE, sep='\t', col.names = NA)

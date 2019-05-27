@@ -7,7 +7,9 @@ Examples: LUAD
 Identifies aberrant expression (outliers) in genomic, phosphoproteomic, and proteomic data. 
 
 Input file: 
-- GCT (gene cluster text) file
+- GCT file (includes meta data)
+OR
+- TSV file (does not include meta data) * note that row_gene and column_gene will be 1 or 2 depending on format
 
 Output files:
 - Meta data (tsv)
@@ -20,9 +22,9 @@ Output files:
 Flags:
 -f/--file		Input file path
 --skip			If there are extra lines after the header, skip this number
---row_gene		Row number where feature values begin (after meta data)
---column_gene		Column number where feature values begin (after meta data)
---meta_column 		Column number where gene IDs or symbols are located
+--row_gene		Row number where features begin (after meta data) 
+--column_gene		Column number where features begin (after meta data) 
+--meta_column 		Column number where gene IDs or symbols are located 
 -o/-out			Output file prefix for all file outputs
 --aes			Color aesthetic of distribution plot
 -u/--upper_x_limit	Upper x limit for distribution plot
@@ -49,7 +51,7 @@ Rscript outlier_analysis.R \
 Compares two cohorts within samples and identifies significantly enriched genes in one (first) cohort against the other (second) cohort. Comparison can include one cohort (ex. Male vs Female) or multiple cohorts (ex. Western Male vs. Western Female).
 
 Input files (all from the output of outlier analysis): 
-- Meta data (tsv)
+- Meta data (tsv) * rows must be meta categories, columns are samples
 - Up-regulated outlier file (tsv)
 - Down-regulated outlier file (tsv)
 - Gene list (txt) * optional 

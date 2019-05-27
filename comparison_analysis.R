@@ -15,7 +15,7 @@ options(warn=1)
 
 # Set up command line
 option_list = list(
-  make_option(c("--up"), type="character", default=NULL, 
+  make_option(c("--up"), type="character", default=NULL,
               help="up-regulated data file path from outlier analysis", metavar="character"),
   make_option(c("--down"), type="character", default=NULL, 
               help="down-regulated data file path from outlier analysis", metavar="character"),
@@ -64,9 +64,9 @@ option_list = list(
   make_option(c("--tumor_group"), type="character", default="Tumor", 
               help="Name of tumor group in tumor column (only required if there are normal 
               and tumor samples", metavar="character"),
-  #make_option(c("--prot"), type="character", default="no", 
-  #            help="'yes' if the input data is proteomic and includes isoforms with the 
-  #            same gene name", metavar="character"),
+  make_option(c("--prot"), type="character", default="no", 
+              help="'yes' if the input data is proteomic and includes isoforms with the 
+              same gene name", metavar="character"),
   make_option(c("--gene_list"), type="character", default="no", 
               help="Path to gene list: only required if you want to isolate specific genes. 
               Text file format", metavar="character")
@@ -416,7 +416,7 @@ for (df_final in dataframes){
   # Filter so that you have the combined samples (summed) for outlier and not_outlier (use grep)
   # Divide the outlier genes by the combined samples to create outlier fractions
   # Isolate genes that are upregulated in group
-
+  
   df_names <- as.vector(c(outlier_group1_col))
   df_names <- gsub('.{8}$', '', df_names)
   collapse_1 <- cbind(outlier_group_1_df, not_outlier_group_1_df)
@@ -432,7 +432,7 @@ for (df_final in dataframes){
   #df_names <- as.vector(c(outlier_group1_col, outlier_group2_col))
   #df_names <- gsub('.{8}$', '', df_names)
   #combine_samples <- sapply(df_names, function(xx) rowSums(df_final[,grep(xx, names(df_final)), drop=FALSE], na.rm = TRUE))
-
+  
   ###
   combine_samples <- as.data.frame(combine_samples)
   outlier_samples_only <- df_final[, c(1, 2:((ncol(combine_samples))+1))]
@@ -539,77 +539,44 @@ for (df_final in dataframes){
   
   if (opt$group_comp == "one"){
     heat_annotation <- heat_filter
-    heat_annotation <- heat_annotation[((heat_annotation$comp_a == opt$group_1a) |
-                                          (heat_annotation$comp_a == opt$group_2a)), ]
-    heat_annotation <- as.data.frame(heat_annotation)
-    heat_annotation[, 'comp_a'] <- as.factor(heat_annotation[, 'comp_a'])
-    heat_annotation <- as.data.frame(heat_annotation$comp_a)
-    colnames(heat_annotation)[1] <- c('comp')
-    levels(heat_annotation)[levels(heat_annotation)==opt$group_1a] <- opt$group_1a
-    levels(heat_annotation)[levels(heat_annotation)==opt$group_2a] <- opt$group_2a
-    ordering <- c(opt$group_1a, opt$group_2a)
-    heat_annotation <- as.data.frame(heat_annotation[order(match(heat_annotation$comp, ordering)), ])
-    colnames(heat_annotation)[1] <- c('comp')
+    heat_annotation_1 <- heat_annotation[(heat_annotation$comp_a == opt$group_1a), ]
+    heat_annotation_2 <- heat_annotation[(heat_annotation$comp_a == opt$group_2a), ]
+    heat_annotation_names <- c(rep(opt$group_1a, nrow(heat_annotation_1)), rep(opt$group_2a, nrow(heat_annotation_2)))
     heat_color <- c(color1, "gray85")
-    heat_annotation$comp <- relevel(heat_annotation$comp, opt$group_1a)
-    heat_annotation[, 'comp'] <- factor(heat_annotation[, 'comp'])
-    names(heat_color) <- levels(heat_annotation$comp)
-    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Comparison = heat_annotation$comp),
+    names(heat_color) <- c(opt$group_1a, opt$group_2a)
+    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Comparison = heat_annotation_names),
                                                col = list(Comparison = heat_color),
                                                annotation_legend_param = list(title_gp = gpar(fontsize = 12),
                                                                               labels_gp = gpar(fontsize = 10)))
   } else if (opt$group_comp == "two") {
     heat_annotation <- heat_filter
-    heat_annotation <- heat_annotation[((heat_annotation$comp_a == opt$group_1a & 
-                                           heat_annotation$comp_b == opt$group_1b) |
-                                          (heat_annotation$comp_a == opt$group_2a &
-                                             heat_annotation$comp_b == opt$group_2b)), ]
-    heat_annotation$comp <- paste(heat_annotation$comp_a, heat_annotation$comp_b, sep = "_")
-    heat_annotation <- as.data.frame(heat_annotation)
-    heat_annotation[, 'comp'] <- as.factor(heat_annotation[, 'comp'])
-    heat_annotation <- as.data.frame(heat_annotation$comp)
-    colnames(heat_annotation)[1] <- c('comp')
-    heat_annotation$comp <- as.factor(as.character(heat_annotation$comp))
-    comp_a <- paste(opt$group_1a, opt$group_1b, sep = "_")
-    comp_b <- paste(opt$group_2a, opt$group_2b, sep = "_")
-    levels(heat_annotation)[levels(heat_annotation)=="comp_a"] <- comp_a
-    levels(heat_annotation)[levels(heat_annotation)=="comp_b"] <- comp_b
-    ordering <- c(comp_a, comp_b)
-    heat_annotation <- as.data.frame(heat_annotation[order(match(heat_annotation$comp, ordering)), ])
-    colnames(heat_annotation)[1] <- c('comp')
+    heat_annotation_1 <- heat_annotation[(heat_annotation$comp_a == opt$group_1a & 
+                                            heat_annotation$comp_b == opt$group_1b), ]
+    heat_annotation_2 <- heat_annotation[(heat_annotation$comp_a == opt$group_2a &
+                                            heat_annotation$comp_b == opt$group_2b), ]
+    comp_a_name <- paste(opt$group_1a, opt$group_1b, sep = "_")
+    comp_b_name <- paste(opt$group_2a, opt$group_2b, sep = "_")
+    heat_annotation_names <- c(rep(comp_a_name, nrow(heat_annotation_1)), rep(comp_b_name, nrow(heat_annotation_2)))
     heat_color <- c(color1, "gray85")
-    heat_annotation[, 'comp'] <- factor(heat_annotation[, 'comp'])
-    names(heat_color) <- levels(heat_annotation$comp)
-    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Comparison = heat_annotation$comp), 
+    names(heat_color) <- c(comp_a_name, comp_b_name)
+    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Comparison = heat_annotation_names),
                                                col = list(Comparison = heat_color),
                                                annotation_legend_param = list(title_gp = gpar(fontsize = 12),
                                                                               labels_gp = gpar(fontsize = 10)))
   } else if (opt$group_comp == "three") {
     heat_annotation <- heat_filter
-    heat_annotation <- heat_annotation[((heat_annotation$comp_a == opt$group_1a & 
-                                           heat_annotation$comp_b == opt$group_1b &
-                                           heat_annotation$comp_c == opt$group_1c) |
-                                          (heat_annotation$comp_a == opt$group_2a &
-                                             heat_annotation$comp_b == opt$group_2b &
-                                             heat_annotation$comp_c == opt$group_2c)), ]
-    heat_annotation$comp <- paste(heat_annotation$comp_a, heat_annotation$comp_b, sep = "_")
-    heat_annotation <- as.data.frame(heat_annotation)
-    heat_annotation[, 'comp'] <- as.factor(heat_annotation[, 'comp'])
-    heat_annotation <- as.data.frame(heat_annotation$comp)
-    colnames(heat_annotation)[1] <- c('comp')
-    heat_annotation$comp <- as.factor(as.character(heat_annotation$comp))
-    comp_a <- paste(opt$group_1a, opt$group_1b, opt$group_1c, sep = "_")
-    comp_b <- paste(opt$group_2a, opt$group_2b, opt$group_2c, sep = "_")
-    levels(heat_annotation)[levels(heat_annotation)=="comp_a"] <- comp_a
-    levels(heat_annotation)[levels(heat_annotation)=="comp_b"] <- comp_b
-    ordering <- c(comp_a, comp_b)
-    heat_annotation <- as.data.frame(heat_annotation[order(match(heat_annotation$comp, ordering)), ])
-    colnames(heat_annotation)[1] <- c('comp')
+    heat_annotation_1 <- heat_annotation[(heat_annotation$comp_a == opt$group_1a & 
+                                            heat_annotation$comp_b == opt$group_1b &
+                                            heat_annotation$comp_c == opt$group_1c), ]
+    heat_annotation_2 <- heat_annotation[(heat_annotation$comp_a == opt$group_2a &
+                                            heat_annotation$comp_b == opt$group_2b &
+                                            heat_annotation$comp_c == opt$group_2c), ]
+    comp_a_name <- paste(opt$group_1a, opt$group_1b, opt$group_1c, sep = "_")
+    comp_b_name <- paste(opt$group_2a, opt$group_2b, opt$group_2c, sep = "_")
+    heat_annotation_names <- c(rep(comp_a_name, nrow(heat_annotation_1)), rep(comp_b_name, nrow(heat_annotation_2)))
     heat_color <- c(color1, "gray85")
-    heat_annotation$comp <- relevel(heat_annotation$comp, comp_a)
-    heat_annotation[, 'comp'] <- factor(heat_annotation[, 'comp'])
-    names(heat_color) <- levels(heat_annotation$comp)
-    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Comparison = heat_annotation$comp), 
+    names(heat_color) <- c(comp_a_name, comp_b_name)
+    heat_annotation_final <- HeatmapAnnotation(df = data.frame(Comparison = heat_annotation_names),
                                                col = list(Comparison = heat_color),
                                                annotation_legend_param = list(title_gp = gpar(fontsize = 12),
                                                                               labels_gp = gpar(fontsize = 10)))
