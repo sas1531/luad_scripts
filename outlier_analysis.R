@@ -23,7 +23,7 @@ option_list = list(
               help="Row number where the features begin", metavar="character"),
   make_option(c("--column_gene"), type="integer", default=1, 
               help="Column number where the features begin", metavar="character"),
-  make_option(c("--meta_column"), type="integer", default=1, 
+  make_option(c("--gene_symbol_column"), type="integer", default=1, 
               help="Column number where gene IDs are located for labelling", metavar="character"),
   make_option(c("-o", "--out"), type="character", default="out", 
               help="Output file prefix for all outlier outputs, do not include file extension", 
@@ -113,8 +113,8 @@ agg_phospho <- function(df_outlier_agg, df_not_outlier_agg, tag){
 # Export this as a new dataframe 
 df <- read.table(opt$f, skip = opt$skip, header = TRUE, sep = "\t", fill = TRUE)
 df <- as.data.frame(df)
-colnames(df)[opt$meta_column] <- "GeneSymbol"
-df_gene <- df[c(opt$row_gene:nrow(df)), c(1, opt$meta_column, opt$column_gene:ncol(df))]
+colnames(df)[opt$gene_symbol_column] <- "GeneSymbol"
+df_gene <- df[c(opt$row_gene:nrow(df)), c(1, opt$gene_symbol_column, opt$column_gene:ncol(df))]
 
 # If the data is proteomic and has isoforms, combine the genesymbol with id (isoform)
 if (opt$prot == "yes"){
@@ -129,7 +129,7 @@ df_gene <- log10_transform(df_gene, opt$b)
 df_names <- colnames(df_gene[3:ncol(df_gene)])
 
 # Isolate meta data
-meta_df <- df[c(1:((opt$row_gene)-1)), c(1, opt$meta_column, opt$column_gene:ncol(df))]
+meta_df <- df[c(1:((opt$row_gene)-1)), c(1, opt$gene_symbol_column, opt$column_gene:ncol(df))]
 
 ### Visualize Distribution 
 

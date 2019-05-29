@@ -24,7 +24,7 @@ Flags:
 --skip			If there are extra lines after the header, skip this number
 --row_gene		Row number where features begin (after meta data) 
 --column_gene		Column number where features begin (after meta data) 
---meta_column 		Column number where gene IDs or symbols are located 
+--gene_symbol_column 	Column number where gene IDs or symbols are located 
 -o/-out			Output file prefix for all file outputs
 --aes			Color aesthetic of distribution plot
 -u/--upper_x_limit	Upper x limit for distribution plot
@@ -70,12 +70,12 @@ Flags:
 --comparison_a		Column name that identifies comparison A (e.g. Region, Gender, Type)
 --comparison_b		Column name that identifies comparison B (e.g. Region, Gender, Type)
 --comparison_c		Column name that identifies comparison C (e.g. Region, Gender, Type)
---group_1a		Group one of comparison A
---group_1b		Group one of comparison B
---group_1c		Group one of comparison C
---group_1a		Group two of comparison A
---group_1b		Group two of comparison B
---group_1c		Group two of comparison C
+--group_1a		Group one of comparison A (test group)
+--group_1b		Group one of comparison B (test group)
+--group_1c		Group one of comparison C (test group)
+--group_2a		Group two of comparison A (control group)
+--group_2b		Group two of comparison B (control group)
+--group_2c		Group two of comparison C (control group)
 --group_comp		Number of groups: comparing one group to one, input 'one' or comparing
               		two groups combined, input 'two', or comparing three groups combined, input 
 			'three'
