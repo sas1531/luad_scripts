@@ -40,7 +40,7 @@ Rscript outlier_analysis.R \
 --skip 2 \
 --row_gene 54 \
 --column_gene 18 \
---meta_column 17 \
+--gene_symbol_column 17 \
 -o proteome \
 --tag_phospho not_phospho
 
